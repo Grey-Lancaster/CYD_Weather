@@ -1,0 +1,20 @@
+# Name,   Type, SubType, Offset,  Size, Flags
+# Custom single-app layout (no OTA) — this project has no OTA update
+# mechanism (flashed via USB only), so the default dual-app partition table
+# (two ~1.25MB app slots for A/B OTA rollback) was wasting half the chip's
+# 4MB flash on a second app slot that can never be used. Reclaimed that
+# space into one larger app slot; the data (LittleFS) partition keeps a
+# generous allowance for storage/WeatherHistoryManager's 30-day log (which
+# only actually uses a few hundred KB) with room to grow.
+#
+# nvs keeps the same offset/size as the Arduino-ESP32 default partition
+# table on purpose, so AppSettings/WiFi credentials in NVS survive
+# re-flashing with this table. The data partition moves and resizes,
+# though — LittleFS won't recognize its old contents there and will
+# reformat itself on next boot (see WeatherHistoryManager::begin()'s
+# fallback path), so the local weather-history log resets to empty. A
+# fresh flash with this table is a one-time full erase either way.
+nvs,      data, nvs,     0x9000,  0x5000,
+app0,     app,  ota_0,   0x10000, 0x300000,
+spiffs,   data, spiffs,  0x310000,0xE0000,
+coredump, data, coredump,0x3F0000,0x10000,
