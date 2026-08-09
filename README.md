@@ -1,5 +1,7 @@
 # CYD Weather
 
+> Forked from [HenrysCat/CYD-Weather-Dashboard](https://github.com/HenrysCat/CYD-Weather-Dashboard) — all credit for the original design and implementation goes there. This fork carries a local fix and WiFi-provisioning tweak on top.
+
 Firmware for the **ESP32-2432S028R** ("Cheap Yellow Display") — a cheap,
 widely available ESP32 board with a built-in 2.8" touchscreen. Turns it into
 a standalone weather station, no separate hardware needed.
