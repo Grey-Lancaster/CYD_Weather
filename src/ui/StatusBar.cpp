@@ -3,9 +3,23 @@
 #include <time.h>
 
 #include "config/Version.h"
+#include "storage/SettingsManager.h"
 #include "ui/AlertTheme.h"
 #include "ui/Theme.h"
 #include "ui/Widgets.h"
+
+namespace {
+// AppSettings::hour12 toggles AM/PM display; buffer callers size for the
+// 12-hour case ("12:59 PM", 8 chars + terminator).
+void formatClock(char* buf, size_t bufSize, int hour, int minute, bool hour12) {
+  if (hour12) {
+    const int h12 = (hour % 12 == 0) ? 12 : hour % 12;
+    snprintf(buf, bufSize, "%d:%02d %s", h12, minute, hour >= 12 ? "PM" : "AM");
+  } else {
+    snprintf(buf, bufSize, "%02d:%02d", hour, minute);
+  }
+}
+}  // namespace
 
 StatusBar::StatusBar(DisplayManager& display, NetworkManager& network, WeatherAlertManager& alerts,
                      WeatherService& weather, TimeManager& time)
@@ -43,7 +57,8 @@ void StatusBar::render(bool force) {
   // -Wformat-truncation (which reasons about %d's theoretical INT_MIN/MAX
   // width, not tm_mday's actual 1..31 range) stays quiet.
   char date[32];
-  char clock[8];
+  char clock[10];
+  const bool hour12 = SettingsManager::instance().get().hour12 != 0;
   strlcpy(location, _cachedLocation[0] != '\0' ? _cachedLocation : "Location", sizeof(location));
   if (_time.isSynced()) {
     const time_t now = time(nullptr);
@@ -57,11 +72,11 @@ void StatusBar::render(bool force) {
     char wdMon[16];
     strftime(wdMon, sizeof(wdMon), "%a, %b", &tmNow);  // e.g. "Sat, Aug" — same as _cachedDate below
     snprintf(date, sizeof(date), "%s %d", wdMon, tmNow.tm_mday);
-    snprintf(clock, sizeof(clock), "%02d:%02d", tmNow.tm_hour, tmNow.tm_min);
+    formatClock(clock, sizeof(clock), tmNow.tm_hour, tmNow.tm_min, hour12);
   } else if (_fetchMinutesOfDay >= 0) {
     const int32_t elapsedMin = (int32_t)((millis() - _fetchMillis) / 60000u);
     const int16_t nowMin = (int16_t)(((_fetchMinutesOfDay + elapsedMin) % 1440 + 1440) % 1440);
-    snprintf(clock, sizeof(clock), "%02d:%02d", nowMin / 60, nowMin % 60);
+    formatClock(clock, sizeof(clock), nowMin / 60, nowMin % 60, hour12);
     strlcpy(date, _cachedDate[0] != '\0' ? _cachedDate : "--", sizeof(date));
   } else {
     strlcpy(date, "--", sizeof(date));

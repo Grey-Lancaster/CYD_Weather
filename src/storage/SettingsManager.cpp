@@ -950,6 +950,112 @@ static void migrateFromV11(const AppSettingsV11& old, AppSettings& out) {
   // defaults applyDefaults() already filled in.
 }
 
+// Frozen snapshot of the schema-12 AppSettings layout, kept only so an
+// existing install's NVS blob can be read and migrated forward. Never edit
+// this struct — it must stay byte-for-byte identical to what schema 12
+// actually wrote.
+struct AppSettingsV12 {
+  uint32_t magic;
+  uint16_t schemaVersion;
+  char wifiSsid[33];
+  char wifiPass[65];
+  char hostname[24];
+  uint8_t brightness;
+  uint8_t dimBrightness;
+  uint16_t dimTimeoutS;
+  uint8_t logLevel;
+  uint16_t touchXMin;
+  uint16_t touchXMax;
+  uint16_t touchYMin;
+  uint16_t touchYMax;
+  char locationName[40];
+  float latitude;
+  float longitude;
+  char timezone[48];
+  uint8_t tempUnit;
+  uint8_t windUnit;
+  uint8_t pressureUnit;
+  uint8_t theme;
+  uint8_t autoPageRotation;
+  uint16_t pageDurationS;
+  uint32_t weatherRefreshS;
+  float elevation;
+  char firmwareVersion[16];
+  uint8_t firstBootCompleted;
+  uint8_t displayFlipped;
+  uint8_t colorOrder;
+  uint8_t mirrorH;
+  uint8_t mirrorV;
+  uint8_t invertColors;
+  uint8_t alertsEnabled;
+  float alertWindWarningKmh;
+  float alertWindDangerKmh;
+  float alertRainProbWarningPct;
+  float alertHeatWarningC;
+  float alertColdWarningC;
+  float alertUvWarningIndex;
+  float alertPressureChangeHpa;
+  uint8_t weatherProvider;
+  char ntpServer[48];
+  char metOfficeApiKey[2048];
+  uint16_t hourlyShiftS;
+  char pirateWeatherApiKey[64];
+  uint8_t rotate90;
+  uint8_t swapNavigation;
+};
+
+static void migrateFromV12(const AppSettingsV12& old, AppSettings& out) {
+  out.magic = cfg::storage::SETTINGS_MAGIC;
+  out.schemaVersion = cfg::storage::SETTINGS_SCHEMA;
+  memcpy(out.wifiSsid, old.wifiSsid, sizeof(out.wifiSsid));
+  memcpy(out.wifiPass, old.wifiPass, sizeof(out.wifiPass));
+  memcpy(out.hostname, old.hostname, sizeof(out.hostname));
+  out.brightness = old.brightness;
+  out.dimBrightness = old.dimBrightness;
+  out.dimTimeoutS = old.dimTimeoutS;
+  out.logLevel = old.logLevel;
+  out.touchXMin = old.touchXMin;
+  out.touchXMax = old.touchXMax;
+  out.touchYMin = old.touchYMin;
+  out.touchYMax = old.touchYMax;
+  memcpy(out.locationName, old.locationName, sizeof(out.locationName));
+  out.latitude = old.latitude;
+  out.longitude = old.longitude;
+  memcpy(out.timezone, old.timezone, sizeof(out.timezone));
+  out.tempUnit = old.tempUnit;
+  out.windUnit = old.windUnit;
+  out.pressureUnit = old.pressureUnit;
+  out.theme = old.theme;
+  out.autoPageRotation = old.autoPageRotation;
+  out.pageDurationS = old.pageDurationS;
+  out.weatherRefreshS = old.weatherRefreshS;
+  out.elevation = old.elevation;
+  strlcpy(out.firmwareVersion, FW_VERSION, sizeof(out.firmwareVersion));
+  out.firstBootCompleted = old.firstBootCompleted;
+  out.displayFlipped = old.displayFlipped;
+  out.colorOrder = old.colorOrder;
+  out.mirrorH = old.mirrorH;
+  out.mirrorV = old.mirrorV;
+  out.invertColors = old.invertColors;
+  out.alertsEnabled = old.alertsEnabled;
+  out.alertWindWarningKmh = old.alertWindWarningKmh;
+  out.alertWindDangerKmh = old.alertWindDangerKmh;
+  out.alertRainProbWarningPct = old.alertRainProbWarningPct;
+  out.alertHeatWarningC = old.alertHeatWarningC;
+  out.alertColdWarningC = old.alertColdWarningC;
+  out.alertUvWarningIndex = old.alertUvWarningIndex;
+  out.alertPressureChangeHpa = old.alertPressureChangeHpa;
+  out.weatherProvider = old.weatherProvider;
+  memcpy(out.ntpServer, old.ntpServer, sizeof(out.ntpServer));
+  memcpy(out.metOfficeApiKey, old.metOfficeApiKey, sizeof(out.metOfficeApiKey));
+  out.hourlyShiftS = old.hourlyShiftS;
+  memcpy(out.pirateWeatherApiKey, old.pirateWeatherApiKey, sizeof(out.pirateWeatherApiKey));
+  out.rotate90 = old.rotate90;
+  out.swapNavigation = old.swapNavigation;
+  // schema 12 never had hour12; leave it at the default applyDefaults()
+  // already filled in.
+}
+
 bool SettingsManager::begin() {
   _nvsOk = _prefs.begin(cfg::storage::NVS_NAMESPACE, false);
   if (!_nvsOk) {
@@ -962,6 +1068,24 @@ bool SettingsManager::begin() {
   if (got == sizeof(_settings) && _settings.magic == cfg::storage::SETTINGS_MAGIC &&
       _settings.schemaVersion == cfg::storage::SETTINGS_SCHEMA) {
     LOGI(TAG, "settings loaded (schema %u)", (unsigned)_settings.schemaVersion);
+    return true;
+  }
+
+  // static, not a plain local: AppSettingsV12 carries the 2048-byte
+  // metOfficeApiKey field, and stacking it on top of AppSettingsV11's
+  // identically-sized copy (same function, both declared unconditionally on
+  // entry) overflowed loopTask's stack on real hardware — confirmed via a
+  // boot-loop with "stack overflow in task loopTask" right after this
+  // function's first log line. Moves it to .bss instead; begin() only runs
+  // once at boot, so there's no stale-data risk from reusing a static here.
+  static AppSettingsV12 v12;
+  memset(&v12, 0, sizeof(v12));
+  const size_t gotV12 = _prefs.getBytes(cfg::storage::SETTINGS_KEY, &v12, sizeof(v12));
+  if (gotV12 == sizeof(v12) && v12.magic == cfg::storage::SETTINGS_MAGIC && v12.schemaVersion == 12) {
+    applyDefaults();  // fills every field, including ones schema 12 never had
+    migrateFromV12(v12, _settings);
+    LOGW(TAG, "migrated settings from schema 12 to %u", (unsigned)cfg::storage::SETTINGS_SCHEMA);
+    save();
     return true;
   }
 
@@ -1140,6 +1264,7 @@ void SettingsManager::applyDefaults() {
   _settings.invertColors = cfg::defaults::INVERT_COLORS ? 1 : 0;
   _settings.rotate90 = cfg::defaults::ROTATE_90 ? 1 : 0;
   _settings.swapNavigation = cfg::defaults::SWAP_NAVIGATION ? 1 : 0;
+  _settings.hour12 = cfg::defaults::HOUR12 ? 1 : 0;
   _settings.alertsEnabled = cfg::alerts::DEFAULT_ENABLED ? 1 : 0;
   _settings.alertWindWarningKmh = cfg::alerts::DEFAULT_WIND_WARNING_KMH;
   _settings.alertWindDangerKmh = cfg::alerts::DEFAULT_WIND_DANGER_KMH;

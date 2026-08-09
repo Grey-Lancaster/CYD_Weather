@@ -93,6 +93,8 @@ struct AppSettings {
   uint8_t swapNavigation;  // 0/1 — reverses which swipe direction advances vs. goes back
                            // (main.cpp's touchManager.onSwipe wiring), for touch controller
                            // variants that report X left-right backwards
+  // --- schema 13 additions ---
+  uint8_t hour12;  // 0 = 24-hour clock, 1 = 12-hour with AM/PM (ui/StatusBar.cpp)
 };
 
 // Owns the one persisted settings blob for the device. Reached via

@@ -66,7 +66,53 @@ dt{color:#96aabe}dd{margin:0}
 <div><label>Latitude</label><input name="latitude" type="number" step="0.000001" min="-90" max="90"></div>
 <div><label>Longitude</label><input name="longitude" type="number" step="0.000001" min="-180" max="180"></div>
 </div>
-<label>Timezone (POSIX TZ string)</label><input name="timezone" maxlength="47" placeholder="UTC0">
+<label>Timezone</label>
+<!-- Values are POSIX TZ rule strings (offset + DST rule), not IANA names —
+     same curated list/format as this project's sibling Claude_usage and
+     TouchWifiProvisioner/CYD_RollingClock projects, sourced from
+     https://github.com/nayarsystems/posix_tz_db. A free-text field here
+     previously let "UTC-4" (POSIX's inverted sign convention: that string
+     actually means 4 hours *ahead* of UTC) silently produce a clock 8 hours
+     off — a dropdown of known-correct values removes that whole class of
+     mistake, and bakes in each zone's DST rule so it doesn't drift wrong
+     again at the next DST transition. -->
+<select name="timezone">
+<option value="HST10">Hawaii (US)</option>
+<option value="AKST9AKDT,M3.2.0,M11.1.0">Alaska (US)</option>
+<option value="PST8PDT,M3.2.0,M11.1.0">Pacific (US)</option>
+<option value="MST7MDT,M3.2.0,M11.1.0">Mountain (US)</option>
+<option value="CST6CDT,M3.2.0,M11.1.0">Central (US)</option>
+<option value="EST5EDT,M3.2.0,M11.1.0">Eastern (US)</option>
+<option value="AST4ADT,M3.2.0,M11.1.0">Atlantic Canada</option>
+<option value="CST6">Mexico City</option>
+<option value="&lt;-05&gt;5">Bogota</option>
+<option value="&lt;-03&gt;3">Sao Paulo (Brazil)</option>
+<option value="&lt;-03&gt;3">Buenos Aires</option>
+<option value="UTC0">UTC</option>
+<option value="GMT0BST,M3.5.0/1,M10.5.0">London (UK)</option>
+<option value="CET-1CEST,M3.5.0,M10.5.0/3">Western Europe</option>
+<option value="EET-2EEST,M3.5.0/3,M10.5.0/4">Eastern Europe</option>
+<option value="MSK-3">Moscow</option>
+<option value="&lt;+03&gt;-3">Istanbul</option>
+<option value="EET-2EEST,M4.5.5/0,M10.5.4/24">Cairo</option>
+<option value="SAST-2">Johannesburg</option>
+<option value="WAT-1">Lagos</option>
+<option value="&lt;+04&gt;-4">Dubai</option>
+<option value="IST-2IDT,M3.4.4/26,M10.5.0">Tel Aviv</option>
+<option value="PKT-5">Karachi</option>
+<option value="IST-5:30">India</option>
+<option value="&lt;+06&gt;-6">Dhaka</option>
+<option value="&lt;+07&gt;-7">Bangkok</option>
+<option value="&lt;+08&gt;-8">Singapore</option>
+<option value="HKT-8">Hong Kong</option>
+<option value="CST-8">China</option>
+<option value="JST-9">Japan</option>
+<option value="KST-9">Korea</option>
+<option value="AEST-10AEDT,M10.1.0,M4.1.0/3">Sydney (Australia)</option>
+<option value="AWST-8">Perth (Australia)</option>
+<option value="NZST-12NZDT,M9.5.0,M4.1.0/3">Auckland (NZ)</option>
+</select>
+<div class="check"><input name="hour12" type="checkbox" id="hr12"><label for="hr12">12-hour clock (AM/PM)</label></div>
 <div class="row">
 <div><label>Temperature units</label>
 <select name="tempUnit"><option value="0">Celsius</option><option value="1">Fahrenheit</option></select></div>
@@ -145,7 +191,11 @@ function el(i){return document.getElementById(i)}
 function setVal(e,v){if(e.type==='checkbox'){e.checked=!!v}else{e.value=v}}
 function getVal(e){
 if(e.type==='checkbox')return e.checked;
-if(e.type==='number'||e.type==='range'||e.tagName==='SELECT')return +e.value;
+if(e.type==='number'||e.type==='range')return +e.value;
+// SELECTs are numeric-valued (theme, units, ...) except timezone, whose
+// option values are POSIX TZ rule strings (e.g. "EST5EDT,M3.2.0,M11.1.0") —
+// +value on those would come out NaN, so only coerce when it actually parses.
+if(e.tagName==='SELECT'){const n=+e.value;return isNaN(n)?e.value:n}
 return e.value}
 async function refresh(){try{
 const s=await j('/api/status');

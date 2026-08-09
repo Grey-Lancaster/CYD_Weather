@@ -7,6 +7,25 @@ Patch is bumped by 4 on each release, carrying into minor odometer-style
 once patch would reach double digits (e.g. `1.0.9` + one release =
 `1.1.3`, not `1.0.13`).
 
+## [1.0.9] - 2026-08-09
+
+### Fixed
+- Timezone field was free-text, and typing the intuitive-looking `"UTC-4"`
+  silently produced a clock 8 hours off — POSIX TZ strings use inverted
+  sign convention (`UTC-4` means 4 hours *ahead* of UTC, not behind), and a
+  flat offset also has no DST rule so it'd drift wrong again every autumn.
+  Replaced with a `<select>` of curated, known-correct POSIX TZ rule
+  strings (same list/format as the sibling Claude_usage and
+  TouchWifiProvisioner/CYD_RollingClock projects, sourced from
+  https://github.com/nayarsystems/posix_tz_db) — removes the whole class
+  of mistake and bakes in each zone's DST rule.
+
+### Added
+- 12-hour clock option (`AppSettings::hour12`, schema 13) — a checkbox in
+  the web portal next to the timezone dropdown; status bar clock shows
+  e.g. `9:29 AM` instead of `09:29` when enabled. Defaults to off (24-hour,
+  matching prior behaviour).
+
 ## [1.0.5] - 2026-08-09
 
 ### Fixed

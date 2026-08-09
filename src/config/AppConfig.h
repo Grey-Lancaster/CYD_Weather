@@ -159,7 +159,7 @@ constexpr uint32_t SETTINGS_MAGIC = 0x43594431;  // "CYD1"
 // Bump on every AppSettings layout change. SettingsManager migrates forward
 // from any older schema it recognizes (see storage/SettingsManager.cpp) so
 // existing installs keep their WiFi credentials and other settings.
-constexpr uint16_t SETTINGS_SCHEMA = 12;
+constexpr uint16_t SETTINGS_SCHEMA = 13;
 }
 
 namespace sdcard {
@@ -284,6 +284,7 @@ constexpr bool MIRROR_V = false;
 constexpr bool INVERT_COLORS = false;
 constexpr bool ROTATE_90 = false;       // MADCTL row/col swap, on top of the flip above
 constexpr bool SWAP_NAVIGATION = false;  // false = swipe-left advances (PageManager::next())
+constexpr bool HOUR12 = false;  // false = 24-hour clock (existing behaviour, kept as the default)
 }
 
 // SNTP time sync (network/TimeManager.h) — gives the device a real,

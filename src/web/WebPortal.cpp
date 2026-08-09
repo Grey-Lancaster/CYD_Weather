@@ -293,6 +293,7 @@ void WebPortal::handleGetSettings() {
   doc["invertColors"] = s.invertColors != 0;
   doc["rotate90"] = s.rotate90 != 0;
   doc["swapNavigation"] = s.swapNavigation != 0;
+  doc["hour12"] = s.hour12 != 0;
   sendJson(200, doc);
 }
 
@@ -425,6 +426,9 @@ void WebPortal::handlePostSettings() {
   }
   if (doc["swapNavigation"].is<bool>()) {
     s.swapNavigation = doc["swapNavigation"].as<bool>() ? 1 : 0;
+  }
+  if (doc["hour12"].is<bool>()) {
+    s.hour12 = doc["hour12"].as<bool>() ? 1 : 0;
   }
 
   _settings.save();
