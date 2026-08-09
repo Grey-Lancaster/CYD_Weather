@@ -1,7 +1,6 @@
 #pragma once
 
 #include <ArduinoJson.h>
-#include <DNSServer.h>
 #include <WebServer.h>
 
 #include <functional>
@@ -12,7 +11,9 @@
 #include "storage/SettingsManager.h"
 #include "weather/WeatherService.h"
 
-// HTTP settings portal + JSON API (reachable in both STA and AP mode):
+// HTTP settings portal + JSON API (reachable once on WiFi — see
+// network/WifiProvisioning.h for how the device gets there before this even
+// starts):
 //   GET  /                     portal SPA (PROGMEM)
 //   GET  /api/status           device + network + weather-fetch status
 //   GET  /api/settings         current settings (wifi password masked)
@@ -32,15 +33,9 @@
 //                              device's UI/touch for the read duration
 //
 // Factory reset is physical-only: holding the BOOT button for
-// cfg::sys::FACTORY_RESET_HOLD_MS (see main.cpp) wipes settings and reboots
+// cfg::sys::FACTORY_RESET_HOLD_MS (see main.cpp) wipes settings (and the
+// saved WiFi credentials — see WifiProvisioning::reset()) and reboots
 // directly, no web API involved.
-//
-// Captive portal: while the network is in AP mode, a wildcard DNS server
-// resolves every hostname to the AP address and unknown URLs (the OS
-// connectivity probes: /generate_204, /hotspot-detect.html, /connecttest.txt,
-// ...) are 302-redirected to "/" — so joining the setup AP pops the portal
-// automatically. DNS starts/stops by observing NetworkManager state; no
-// external wiring is needed.
 //
 // To add future settings to the portal:
 //   1. Append the field to AppSettings (storage/SettingsManager.h) and bump
@@ -80,8 +75,6 @@ class WebPortal {
   void sendJson(int code, const JsonDocument& doc);
   void sendOk(bool restartRequired = false);
   void scheduleRestart();
-  void updateCaptiveDns();
-  void redirectToPortal();
 
   SettingsManager& _settings;
   NetworkManager& _network;
@@ -89,9 +82,7 @@ class WebPortal {
   SdCardManager& _sdCard;
   DisplayManager& _display;
   WebServer _http;
-  DNSServer _dns;
   SettingsChangedCallback _onSettingsChanged;
   uint32_t _restartAtMs = 0;
   uint32_t _applyAtMs = 0;
-  bool _captiveActive = false;
 };

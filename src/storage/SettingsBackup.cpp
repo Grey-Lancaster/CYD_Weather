@@ -19,8 +19,6 @@ void toJson(const AppSettings& s, JsonDocument& doc) {
   doc["schemaVersion"] = s.schemaVersion;
 
   JsonObject o = doc["settings"].to<JsonObject>();
-  o["wifiSsid"] = s.wifiSsid;
-  o["wifiPass"] = s.wifiPass;
   o["hostname"] = s.hostname;
   o["ntpServer"] = s.ntpServer;
   o["brightness"] = s.brightness;
@@ -71,11 +69,9 @@ void toJson(const AppSettings& s, JsonDocument& doc) {
 
 bool fromJson(const JsonDocument& doc, AppSettings& s) {
   JsonObjectConst o = doc["settings"];
-  if (!o["wifiSsid"].is<const char*>()) return false;
+  if (!o["hostname"].is<const char*>()) return false;
 
-  strlcpy(s.wifiSsid, o["wifiSsid"], sizeof(s.wifiSsid));
-  if (o["wifiPass"].is<const char*>()) strlcpy(s.wifiPass, o["wifiPass"], sizeof(s.wifiPass));
-  if (o["hostname"].is<const char*>()) strlcpy(s.hostname, o["hostname"], sizeof(s.hostname));
+  strlcpy(s.hostname, o["hostname"], sizeof(s.hostname));
   if (o["ntpServer"].is<const char*>()) strlcpy(s.ntpServer, o["ntpServer"], sizeof(s.ntpServer));
   if (o["brightness"].is<unsigned>())
     s.brightness = (uint8_t)clampU32(o["brightness"], cfg::display::MIN_BRIGHTNESS, 255);

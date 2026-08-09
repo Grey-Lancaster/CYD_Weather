@@ -36,8 +36,9 @@ struct AppSettingsV1 {
 static void migrateFromV1(const AppSettingsV1& old, AppSettings& out) {
   out.magic = cfg::storage::SETTINGS_MAGIC;
   out.schemaVersion = cfg::storage::SETTINGS_SCHEMA;
-  memcpy(out.wifiSsid, old.wifiSsid, sizeof(out.wifiSsid));
-  memcpy(out.wifiPass, old.wifiPass, sizeof(out.wifiPass));
+  // wifiSsid/wifiPass no longer exist on the current AppSettings (schema
+  // 14 — see its struct-top comment); old.wifiSsid/wifiPass are simply not
+  // copied forward, same as migrateFromV13's fuller explanation.
   memcpy(out.hostname, old.hostname, sizeof(out.hostname));
   out.brightness = old.brightness;
   out.dimBrightness = old.dimBrightness;
@@ -87,8 +88,9 @@ struct AppSettingsV2 {
 static void migrateFromV2(const AppSettingsV2& old, AppSettings& out) {
   out.magic = cfg::storage::SETTINGS_MAGIC;
   out.schemaVersion = cfg::storage::SETTINGS_SCHEMA;
-  memcpy(out.wifiSsid, old.wifiSsid, sizeof(out.wifiSsid));
-  memcpy(out.wifiPass, old.wifiPass, sizeof(out.wifiPass));
+  // wifiSsid/wifiPass no longer exist on the current AppSettings (schema
+  // 14 — see its struct-top comment); old.wifiSsid/wifiPass are simply not
+  // copied forward, same as migrateFromV13's fuller explanation.
   memcpy(out.hostname, old.hostname, sizeof(out.hostname));
   out.brightness = old.brightness;
   out.dimBrightness = old.dimBrightness;
@@ -152,8 +154,9 @@ struct AppSettingsV3 {
 static void migrateFromV3(const AppSettingsV3& old, AppSettings& out) {
   out.magic = cfg::storage::SETTINGS_MAGIC;
   out.schemaVersion = cfg::storage::SETTINGS_SCHEMA;
-  memcpy(out.wifiSsid, old.wifiSsid, sizeof(out.wifiSsid));
-  memcpy(out.wifiPass, old.wifiPass, sizeof(out.wifiPass));
+  // wifiSsid/wifiPass no longer exist on the current AppSettings (schema
+  // 14 — see its struct-top comment); old.wifiSsid/wifiPass are simply not
+  // copied forward, same as migrateFromV13's fuller explanation.
   memcpy(out.hostname, old.hostname, sizeof(out.hostname));
   out.brightness = old.brightness;
   out.dimBrightness = old.dimBrightness;
@@ -223,8 +226,9 @@ struct AppSettingsV4 {
 static void migrateFromV4(const AppSettingsV4& old, AppSettings& out) {
   out.magic = cfg::storage::SETTINGS_MAGIC;
   out.schemaVersion = cfg::storage::SETTINGS_SCHEMA;
-  memcpy(out.wifiSsid, old.wifiSsid, sizeof(out.wifiSsid));
-  memcpy(out.wifiPass, old.wifiPass, sizeof(out.wifiPass));
+  // wifiSsid/wifiPass no longer exist on the current AppSettings (schema
+  // 14 — see its struct-top comment); old.wifiSsid/wifiPass are simply not
+  // copied forward, same as migrateFromV13's fuller explanation.
   memcpy(out.hostname, old.hostname, sizeof(out.hostname));
   out.brightness = old.brightness;
   out.dimBrightness = old.dimBrightness;
@@ -307,8 +311,9 @@ struct AppSettingsV5 {
 static void migrateFromV5(const AppSettingsV5& old, AppSettings& out) {
   out.magic = cfg::storage::SETTINGS_MAGIC;
   out.schemaVersion = cfg::storage::SETTINGS_SCHEMA;
-  memcpy(out.wifiSsid, old.wifiSsid, sizeof(out.wifiSsid));
-  memcpy(out.wifiPass, old.wifiPass, sizeof(out.wifiPass));
+  // wifiSsid/wifiPass no longer exist on the current AppSettings (schema
+  // 14 — see its struct-top comment); old.wifiSsid/wifiPass are simply not
+  // copied forward, same as migrateFromV13's fuller explanation.
   memcpy(out.hostname, old.hostname, sizeof(out.hostname));
   out.brightness = old.brightness;
   out.dimBrightness = old.dimBrightness;
@@ -400,8 +405,9 @@ struct AppSettingsV6 {
 static void migrateFromV6(const AppSettingsV6& old, AppSettings& out) {
   out.magic = cfg::storage::SETTINGS_MAGIC;
   out.schemaVersion = cfg::storage::SETTINGS_SCHEMA;
-  memcpy(out.wifiSsid, old.wifiSsid, sizeof(out.wifiSsid));
-  memcpy(out.wifiPass, old.wifiPass, sizeof(out.wifiPass));
+  // wifiSsid/wifiPass no longer exist on the current AppSettings (schema
+  // 14 — see its struct-top comment); old.wifiSsid/wifiPass are simply not
+  // copied forward, same as migrateFromV13's fuller explanation.
   memcpy(out.hostname, old.hostname, sizeof(out.hostname));
   out.brightness = old.brightness;
   out.dimBrightness = old.dimBrightness;
@@ -495,8 +501,9 @@ struct AppSettingsV7 {
 static void migrateFromV7(const AppSettingsV7& old, AppSettings& out) {
   out.magic = cfg::storage::SETTINGS_MAGIC;
   out.schemaVersion = cfg::storage::SETTINGS_SCHEMA;
-  memcpy(out.wifiSsid, old.wifiSsid, sizeof(out.wifiSsid));
-  memcpy(out.wifiPass, old.wifiPass, sizeof(out.wifiPass));
+  // wifiSsid/wifiPass no longer exist on the current AppSettings (schema
+  // 14 — see its struct-top comment); old.wifiSsid/wifiPass are simply not
+  // copied forward, same as migrateFromV13's fuller explanation.
   memcpy(out.hostname, old.hostname, sizeof(out.hostname));
   out.brightness = old.brightness;
   out.dimBrightness = old.dimBrightness;
@@ -592,8 +599,9 @@ struct AppSettingsV8 {
 static void migrateFromV8(const AppSettingsV8& old, AppSettings& out) {
   out.magic = cfg::storage::SETTINGS_MAGIC;
   out.schemaVersion = cfg::storage::SETTINGS_SCHEMA;
-  memcpy(out.wifiSsid, old.wifiSsid, sizeof(out.wifiSsid));
-  memcpy(out.wifiPass, old.wifiPass, sizeof(out.wifiPass));
+  // wifiSsid/wifiPass no longer exist on the current AppSettings (schema
+  // 14 — see its struct-top comment); old.wifiSsid/wifiPass are simply not
+  // copied forward, same as migrateFromV13's fuller explanation.
   memcpy(out.hostname, old.hostname, sizeof(out.hostname));
   out.brightness = old.brightness;
   out.dimBrightness = old.dimBrightness;
@@ -694,8 +702,9 @@ struct AppSettingsV9 {
 static void migrateFromV9(const AppSettingsV9& old, AppSettings& out) {
   out.magic = cfg::storage::SETTINGS_MAGIC;
   out.schemaVersion = cfg::storage::SETTINGS_SCHEMA;
-  memcpy(out.wifiSsid, old.wifiSsid, sizeof(out.wifiSsid));
-  memcpy(out.wifiPass, old.wifiPass, sizeof(out.wifiPass));
+  // wifiSsid/wifiPass no longer exist on the current AppSettings (schema
+  // 14 — see its struct-top comment); old.wifiSsid/wifiPass are simply not
+  // copied forward, same as migrateFromV13's fuller explanation.
   memcpy(out.hostname, old.hostname, sizeof(out.hostname));
   out.brightness = old.brightness;
   out.dimBrightness = old.dimBrightness;
@@ -799,8 +808,9 @@ struct AppSettingsV10 {
 static void migrateFromV10(const AppSettingsV10& old, AppSettings& out) {
   out.magic = cfg::storage::SETTINGS_MAGIC;
   out.schemaVersion = cfg::storage::SETTINGS_SCHEMA;
-  memcpy(out.wifiSsid, old.wifiSsid, sizeof(out.wifiSsid));
-  memcpy(out.wifiPass, old.wifiPass, sizeof(out.wifiPass));
+  // wifiSsid/wifiPass no longer exist on the current AppSettings (schema
+  // 14 — see its struct-top comment); old.wifiSsid/wifiPass are simply not
+  // copied forward, same as migrateFromV13's fuller explanation.
   memcpy(out.hostname, old.hostname, sizeof(out.hostname));
   out.brightness = old.brightness;
   out.dimBrightness = old.dimBrightness;
@@ -903,8 +913,9 @@ struct AppSettingsV11 {
 static void migrateFromV11(const AppSettingsV11& old, AppSettings& out) {
   out.magic = cfg::storage::SETTINGS_MAGIC;
   out.schemaVersion = cfg::storage::SETTINGS_SCHEMA;
-  memcpy(out.wifiSsid, old.wifiSsid, sizeof(out.wifiSsid));
-  memcpy(out.wifiPass, old.wifiPass, sizeof(out.wifiPass));
+  // wifiSsid/wifiPass no longer exist on the current AppSettings (schema
+  // 14 — see its struct-top comment); old.wifiSsid/wifiPass are simply not
+  // copied forward, same as migrateFromV13's fuller explanation.
   memcpy(out.hostname, old.hostname, sizeof(out.hostname));
   out.brightness = old.brightness;
   out.dimBrightness = old.dimBrightness;
@@ -1007,8 +1018,9 @@ struct AppSettingsV12 {
 static void migrateFromV12(const AppSettingsV12& old, AppSettings& out) {
   out.magic = cfg::storage::SETTINGS_MAGIC;
   out.schemaVersion = cfg::storage::SETTINGS_SCHEMA;
-  memcpy(out.wifiSsid, old.wifiSsid, sizeof(out.wifiSsid));
-  memcpy(out.wifiPass, old.wifiPass, sizeof(out.wifiPass));
+  // wifiSsid/wifiPass no longer exist on the current AppSettings (schema
+  // 14 — see its struct-top comment); old.wifiSsid/wifiPass are simply not
+  // copied forward, same as migrateFromV13's fuller explanation.
   memcpy(out.hostname, old.hostname, sizeof(out.hostname));
   out.brightness = old.brightness;
   out.dimBrightness = old.dimBrightness;
@@ -1056,6 +1068,118 @@ static void migrateFromV12(const AppSettingsV12& old, AppSettings& out) {
   // already filled in.
 }
 
+// Frozen snapshot of the schema-13 AppSettings layout, kept only so an
+// existing install's NVS blob can be read and migrated forward. Never edit
+// this struct — it must stay byte-for-byte identical to what schema 13
+// actually wrote. Notably still has wifiSsid/wifiPass — those existed at
+// schema 13 and are dropped starting schema 14 (see AppSettings' own
+// struct-top comment for why).
+struct AppSettingsV13 {
+  uint32_t magic;
+  uint16_t schemaVersion;
+  char wifiSsid[33];
+  char wifiPass[65];
+  char hostname[24];
+  uint8_t brightness;
+  uint8_t dimBrightness;
+  uint16_t dimTimeoutS;
+  uint8_t logLevel;
+  uint16_t touchXMin;
+  uint16_t touchXMax;
+  uint16_t touchYMin;
+  uint16_t touchYMax;
+  char locationName[40];
+  float latitude;
+  float longitude;
+  char timezone[48];
+  uint8_t tempUnit;
+  uint8_t windUnit;
+  uint8_t pressureUnit;
+  uint8_t theme;
+  uint8_t autoPageRotation;
+  uint16_t pageDurationS;
+  uint32_t weatherRefreshS;
+  float elevation;
+  char firmwareVersion[16];
+  uint8_t firstBootCompleted;
+  uint8_t displayFlipped;
+  uint8_t colorOrder;
+  uint8_t mirrorH;
+  uint8_t mirrorV;
+  uint8_t invertColors;
+  uint8_t alertsEnabled;
+  float alertWindWarningKmh;
+  float alertWindDangerKmh;
+  float alertRainProbWarningPct;
+  float alertHeatWarningC;
+  float alertColdWarningC;
+  float alertUvWarningIndex;
+  float alertPressureChangeHpa;
+  uint8_t weatherProvider;
+  char ntpServer[48];
+  char metOfficeApiKey[2048];
+  uint16_t hourlyShiftS;
+  char pirateWeatherApiKey[64];
+  uint8_t rotate90;
+  uint8_t swapNavigation;
+  uint8_t hour12;
+};
+
+static void migrateFromV13(const AppSettingsV13& old, AppSettings& out) {
+  out.magic = cfg::storage::SETTINGS_MAGIC;
+  out.schemaVersion = cfg::storage::SETTINGS_SCHEMA;
+  // wifiSsid/wifiPass deliberately not copied — dropped in schema 14 (see
+  // AppSettings' struct-top comment). An existing install's WiFi credentials
+  // aren't lost, though: they're already separately saved in
+  // TouchWifiProvisioner's own NVS namespace the first time this firmware
+  // ran (WifiProvisioning::begin() writes there on every successful
+  // connect, same as any earlier firmware version did).
+  memcpy(out.hostname, old.hostname, sizeof(out.hostname));
+  out.brightness = old.brightness;
+  out.dimBrightness = old.dimBrightness;
+  out.dimTimeoutS = old.dimTimeoutS;
+  out.logLevel = old.logLevel;
+  out.touchXMin = old.touchXMin;
+  out.touchXMax = old.touchXMax;
+  out.touchYMin = old.touchYMin;
+  out.touchYMax = old.touchYMax;
+  memcpy(out.locationName, old.locationName, sizeof(out.locationName));
+  out.latitude = old.latitude;
+  out.longitude = old.longitude;
+  memcpy(out.timezone, old.timezone, sizeof(out.timezone));
+  out.tempUnit = old.tempUnit;
+  out.windUnit = old.windUnit;
+  out.pressureUnit = old.pressureUnit;
+  out.theme = old.theme;
+  out.autoPageRotation = old.autoPageRotation;
+  out.pageDurationS = old.pageDurationS;
+  out.weatherRefreshS = old.weatherRefreshS;
+  out.elevation = old.elevation;
+  strlcpy(out.firmwareVersion, FW_VERSION, sizeof(out.firmwareVersion));
+  out.firstBootCompleted = old.firstBootCompleted;
+  out.displayFlipped = old.displayFlipped;
+  out.colorOrder = old.colorOrder;
+  out.mirrorH = old.mirrorH;
+  out.mirrorV = old.mirrorV;
+  out.invertColors = old.invertColors;
+  out.alertsEnabled = old.alertsEnabled;
+  out.alertWindWarningKmh = old.alertWindWarningKmh;
+  out.alertWindDangerKmh = old.alertWindDangerKmh;
+  out.alertRainProbWarningPct = old.alertRainProbWarningPct;
+  out.alertHeatWarningC = old.alertHeatWarningC;
+  out.alertColdWarningC = old.alertColdWarningC;
+  out.alertUvWarningIndex = old.alertUvWarningIndex;
+  out.alertPressureChangeHpa = old.alertPressureChangeHpa;
+  out.weatherProvider = old.weatherProvider;
+  memcpy(out.ntpServer, old.ntpServer, sizeof(out.ntpServer));
+  memcpy(out.metOfficeApiKey, old.metOfficeApiKey, sizeof(out.metOfficeApiKey));
+  out.hourlyShiftS = old.hourlyShiftS;
+  memcpy(out.pirateWeatherApiKey, old.pirateWeatherApiKey, sizeof(out.pirateWeatherApiKey));
+  out.rotate90 = old.rotate90;
+  out.swapNavigation = old.swapNavigation;
+  out.hour12 = old.hour12;
+}
+
 bool SettingsManager::begin() {
   _nvsOk = _prefs.begin(cfg::storage::NVS_NAMESPACE, false);
   if (!_nvsOk) {
@@ -1068,6 +1192,20 @@ bool SettingsManager::begin() {
   if (got == sizeof(_settings) && _settings.magic == cfg::storage::SETTINGS_MAGIC &&
       _settings.schemaVersion == cfg::storage::SETTINGS_SCHEMA) {
     LOGI(TAG, "settings loaded (schema %u)", (unsigned)_settings.schemaVersion);
+    return true;
+  }
+
+  // static, not a plain local — same reasoning as AppSettingsV12 below
+  // (its own comment explains the stack-overflow this avoids): both carry
+  // the 2048-byte metOfficeApiKey field.
+  static AppSettingsV13 v13;
+  memset(&v13, 0, sizeof(v13));
+  const size_t gotV13 = _prefs.getBytes(cfg::storage::SETTINGS_KEY, &v13, sizeof(v13));
+  if (gotV13 == sizeof(v13) && v13.magic == cfg::storage::SETTINGS_MAGIC && v13.schemaVersion == 13) {
+    applyDefaults();  // fills every field, including ones schema 13 never had
+    migrateFromV13(v13, _settings);
+    LOGW(TAG, "migrated settings from schema 13 to %u", (unsigned)cfg::storage::SETTINGS_SCHEMA);
+    save();
     return true;
   }
 
@@ -1232,8 +1370,6 @@ void SettingsManager::applyDefaults() {
   _settings.magic = cfg::storage::SETTINGS_MAGIC;
   _settings.schemaVersion = cfg::storage::SETTINGS_SCHEMA;
   strlcpy(_settings.hostname, cfg::defaults::HOSTNAME, sizeof(_settings.hostname));
-  strlcpy(_settings.wifiSsid, cfg::net::DEFAULT_WIFI_SSID, sizeof(_settings.wifiSsid));
-  strlcpy(_settings.wifiPass, cfg::net::DEFAULT_WIFI_PASSWORD, sizeof(_settings.wifiPass));
   _settings.brightness = cfg::defaults::BRIGHTNESS;
   _settings.dimBrightness = cfg::defaults::DIM_BRIGHTNESS;
   _settings.dimTimeoutS = cfg::defaults::DIM_TIMEOUT_S;
@@ -1291,9 +1427,9 @@ void SettingsManager::printSettings() const {
   const AppSettings& s = _settings;
   Serial.println(F("---- settings ----"));
   Serial.printf("  schemaVersion    = %u\r\n", (unsigned)s.schemaVersion);
-  Serial.printf("  [wifi]\r\n");
-  Serial.printf("  wifiSsid         = %s\r\n", s.wifiSsid);
-  Serial.printf("  wifiPass         = %s\r\n", s.wifiPass[0] != '\0' ? "********" : "");
+  // WiFi credentials live in TouchWifiProvisioner's own storage now, not
+  // here — see network/WifiProvisioning.h and the struct-top comment in
+  // SettingsManager.h.
   Serial.printf("  [location]\r\n");
   Serial.printf("  locationName     = %s\r\n", s.locationName);
   Serial.printf("  latitude         = %.5f\r\n", s.latitude);
@@ -1344,8 +1480,6 @@ void SettingsManager::printSettings() const {
 
 String SettingsManager::getSetting(const String& key) const {
   const AppSettings& s = _settings;
-  if (key == "wifiSsid") return s.wifiSsid;
-  if (key == "wifiPass") return s.wifiPass[0] != '\0' ? "********" : "";
   if (key == "hostname") return s.hostname;
   if (key == "brightness") return String(s.brightness);
   if (key == "dimBrightness") return String(s.dimBrightness);
@@ -1391,11 +1525,7 @@ String SettingsManager::getSetting(const String& key) const {
 
 bool SettingsManager::setSetting(const String& key, const String& value) {
   AppSettings& s = _settings;
-  if (key == "wifiSsid") {
-    strlcpy(s.wifiSsid, value.c_str(), sizeof(s.wifiSsid));
-  } else if (key == "wifiPass") {
-    strlcpy(s.wifiPass, value.c_str(), sizeof(s.wifiPass));
-  } else if (key == "hostname") {
+  if (key == "hostname") {
     strlcpy(s.hostname, value.c_str(), sizeof(s.hostname));
   } else if (key == "brightness") {
     s.brightness = (uint8_t)clampU32(value.toInt(), cfg::display::MIN_BRIGHTNESS, 255);

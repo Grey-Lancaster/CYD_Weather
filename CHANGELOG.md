@@ -7,6 +7,37 @@ Patch is bumped by 4 on each release, carrying into minor odometer-style
 once patch would reach double digits (e.g. `1.0.9` + one release =
 `1.1.3`, not `1.0.13`).
 
+## [1.1.3] - 2026-08-09
+
+### Changed
+- Replaced the AP-mode/captive-portal WiFi setup flow with an on-device
+  touchscreen picker and keyboard —
+  [TouchWifiProvisioner](https://github.com/Grey-Lancaster/TouchWifiProvisioner),
+  a separate library built on LVGL. LVGL is scoped entirely to this brief
+  pre-connect phase (see `network/WifiProvisioning.cpp`); the rest of the
+  app still draws directly via TFT_eSPI, unchanged.
+- WiFi credentials moved out of `AppSettings` entirely (schema 14) —
+  TouchWifiProvisioner owns them in its own NVS namespace now, so there's
+  exactly one place they can live instead of two that could drift out of
+  sync. The web portal's WiFi SSID/password fields are gone; set WiFi
+  on-device instead.
+- `SetupPage` removed (it only ever pointed at the old captive portal).
+  `NetworkManager` slimmed to a thin WiFi-status mirror — it no longer
+  drives connecting/retrying/AP-fallback, since TouchWifiProvisioner does
+  all of that (including reconnecting on its own after a drop) before the
+  rest of the app even starts.
+- Factory reset (BOOT button, 10s hold) now also clears TouchWifiProvisioner's
+  saved credentials, not just `AppSettings` — previously they'd have
+  survived a factory reset as a surprising leftover in a separate NVS
+  namespace.
+
+### Fixed
+- Removed the `shop2`/baked-in default WiFi credentials added earlier this
+  series (meant as a local one-off convenience, but got committed and
+  pushed to this public repo along with an unrelated fix — rotate that
+  router password if you haven't already). On-device provisioning replaces
+  the need for any baked-in default.
+
 ## [1.0.9] - 2026-08-09
 
 ### Fixed

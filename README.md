@@ -76,15 +76,19 @@ moves/resizes).
 
 ## First boot
 
-With no WiFi credentials stored, the device starts a setup AP:
+With no WiFi credentials stored, the device shows an on-device network
+picker and keyboard right on its own touchscreen — pick your network, type
+the password, done. No phone-borrowed hotspot/captive-portal dance. This is
+[TouchWifiProvisioner](https://github.com/Grey-Lancaster/TouchWifiProvisioner),
+a separate library that owns the screen (via LVGL) only for this brief
+pre-connect step, then hands off to the app below once connected.
 
-- SSID `CYD-xxxx` (chip-id suffix), password `cyd-setup`
-- Browse to `http://192.168.4.1`, enter your WiFi credentials, save.
-
-Once connected it serves the same portal at `http://cyd-weather.local`
-(mDNS) or its DHCP address (shown in the status bar / System Info page).
-Moving the device to a new network later works the same way: after 3 failed
-connection attempts it automatically falls back to the setup AP.
+Once connected, the settings portal is at `http://cyd-weather.local` (mDNS)
+or the device's DHCP address (shown in the status bar / System Info page).
+If the connection ever drops, the device keeps trying to reconnect on its
+own in the background; it only shows the picker again if there are no
+saved credentials at all (e.g. after a factory reset) or a fresh connect
+attempt fails outright.
 
 ## Web API
 
@@ -101,16 +105,19 @@ connection attempts it automatically falls back to the setup AP.
 | `/api/sdcard/backup` | POST | Write the same backup JSON to the SD card |
 | `/api/sdcard/restore` | POST | Read it back from the SD card and apply |
 
-Settings cover WiFi/hostname, location & timezone, units, weather provider
-and API key, refresh interval, display (brightness, rotation, color order),
+Settings cover hostname, location & timezone, units, weather provider and
+API key, refresh interval, display (brightness, rotation, color order),
 touch calibration, and NTP server — all changed live, no reflash needed.
+WiFi credentials are set separately, on-device (see "First boot" above).
 
 Factory reset is physical-only: hold the BOOT button for 10 seconds to wipe
-settings and reboot.
+settings *and* saved WiFi credentials, then reboot.
 
 The web UI's Backup & Restore card can save/load the full settings file
-(WiFi password and API keys included, unmasked) either as a browser download
-or, if a microSD card is present in the slot, directly to/from it.
+(API keys included, unmasked) either as a browser download or, if a
+microSD card is present in the slot, directly to/from it. WiFi credentials
+aren't part of this file — they live in TouchWifiProvisioner's own storage,
+set via the on-device picker (see "First boot" above), not the web portal.
 
 ## Project layout
 
@@ -118,9 +125,11 @@ or, if a microSD card is present in the slot, directly to/from it.
 src/
   config/    Version.h, AppConfig.h — every pin/timeout/default lives here
   display/   DisplayManager (TFT, backlight PWM, sprite canvas), TouchManager
-  network/   NetworkManager — non-blocking WiFi state machine, AP fallback, mDNS
+  network/   WifiProvisioning — bridges TouchWifiProvisioner (LVGL) onto this
+             project's TFT_eSPI/XPT2046 hardware for the pre-connect picker
+             NetworkManager — thin WiFi status mirror once connected, mDNS
              TimeManager — SNTP sync, DST-aware wall clock
-  pages/     Page base class, PageManager, the dashboard pages, SetupPage, SystemPage
+  pages/     Page base class, PageManager, the dashboard pages, SystemPage
   storage/   SettingsManager (versioned NVS blob) + WeatherHistoryManager (LittleFS CSV log)
   ui/        Theme, StatusBar, shared widgets/layout, WeatherIconTheme + WeatherIconBitmaps (icon art),
              AlertTheme, Graph (reusable line-graph component)

@@ -75,6 +75,14 @@ void TouchManager::poll() {
   _wasTouched = touched;
 }
 
+bool TouchManager::rawTouch(Point& outPoint) {
+  if (!_ok) return false;
+  if (!(_ts.tirqTouched() && _ts.touched())) return false;
+  const TS_Point raw = _ts.getPoint();
+  outPoint = mapRawToScreen(raw.x, raw.y);
+  return true;
+}
+
 TouchManager::Point TouchManager::mapRawToScreen(int16_t rawX, int16_t rawY) const {
   const long maxX = (long)cfg::display::WIDTH - 1;
   const long maxY = (long)cfg::display::HEIGHT - 1;

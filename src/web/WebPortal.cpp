@@ -1,7 +1,5 @@
 #include "web/WebPortal.h"
 
-#include <WiFi.h>
-
 #include <new>
 
 #include "config/AppConfig.h"
@@ -47,8 +45,6 @@ bool WebPortal::begin() {
 }
 
 void WebPortal::handle() {
-  updateCaptiveDns();
-  if (_captiveActive) _dns.processNextRequest();
   _http.handleClient();
   if (_applyAtMs != 0 && (int32_t)(millis() - _applyAtMs) >= 0) {
     _applyAtMs = 0;
@@ -59,30 +55,6 @@ void WebPortal::handle() {
     Serial.flush();
     ESP.restart();
   }
-}
-
-void WebPortal::updateCaptiveDns() {
-  const bool wantCaptive = _network.state() == NetState::ApMode;
-  if (wantCaptive == _captiveActive) return;
-  if (wantCaptive) {
-    _dns.setErrorReplyCode(DNSReplyCode::NoError);
-    _captiveActive = _dns.start(cfg::web::DNS_PORT, "*", WiFi.softAPIP());
-    if (_captiveActive) {
-      LOGI(TAG, "captive portal DNS up (all hosts -> %s)",
-           WiFi.softAPIP().toString().c_str());
-    } else {
-      LOGE(TAG, "captive portal DNS failed to start");
-    }
-  } else {
-    _dns.stop();
-    _captiveActive = false;
-    LOGI(TAG, "captive portal DNS stopped");
-  }
-}
-
-void WebPortal::redirectToPortal() {
-  _http.sendHeader("Location", String("http://") + WiFi.softAPIP().toString() + "/", true);
-  _http.send(302, "text/plain", "");
 }
 
 void WebPortal::handleRoot() {
@@ -260,8 +232,6 @@ void WebPortal::handleStatus() {
 void WebPortal::handleGetSettings() {
   const AppSettings& s = _settings.get();
   JsonDocument doc;
-  doc["wifiSsid"] = s.wifiSsid;
-  doc["wifiPass"] = s.wifiPass[0] != '\0' ? cfg::web::PASS_MASK : "";
   doc["hostname"] = s.hostname;
   doc["ntpServer"] = s.ntpServer;
   doc["brightness"] = s.brightness;
@@ -311,16 +281,6 @@ void WebPortal::handlePostSettings() {
   AppSettings& s = _settings.get();
   bool restartRequired = false;
 
-  if (doc["wifiSsid"].is<const char*>()) {
-    strlcpy(s.wifiSsid, doc["wifiSsid"].as<const char*>(), sizeof(s.wifiSsid));
-  }
-  if (doc["wifiPass"].is<const char*>()) {
-    const char* pass = doc["wifiPass"].as<const char*>();
-    // Posting the mask back means "leave the stored password unchanged".
-    if (strcmp(pass, cfg::web::PASS_MASK) != 0) {
-      strlcpy(s.wifiPass, pass, sizeof(s.wifiPass));
-    }
-  }
   if (doc["hostname"].is<const char*>()) {
     const char* hostname = doc["hostname"].as<const char*>();
     if (hostname[0] != '\0' && strcmp(hostname, s.hostname) != 0) {
@@ -378,8 +338,7 @@ void WebPortal::handlePostSettings() {
   }
   if (doc["metOfficeApiKey"].is<const char*>()) {
     const char* key = doc["metOfficeApiKey"].as<const char*>();
-    // Posting the mask back means "leave the stored key unchanged" — same
-    // convention as wifiPass above.
+    // Posting the mask back means "leave the stored key unchanged".
     if (strcmp(key, cfg::web::PASS_MASK) != 0) {
       strlcpy(s.metOfficeApiKey, key, sizeof(s.metOfficeApiKey));
     }
@@ -516,13 +475,6 @@ void WebPortal::handleSdCardRestore() {
 }
 
 void WebPortal::handleNotFound() {
-  // In AP mode the OS connectivity probes (Android /generate_204, Apple
-  // /hotspot-detect.html, Windows /connecttest.txt, ...) all land here with a
-  // foreign Host header; redirecting them opens the OS captive-portal sheet.
-  if (_captiveActive && _http.hostHeader() != WiFi.softAPIP().toString()) {
-    redirectToPortal();
-    return;
-  }
   JsonDocument doc;
   doc["ok"] = false;
   doc["error"] = "not found";

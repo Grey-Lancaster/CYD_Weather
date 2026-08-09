@@ -8,8 +8,9 @@
 # only actually uses a few hundred KB) with room to grow.
 #
 # nvs keeps the same offset/size as the Arduino-ESP32 default partition
-# table on purpose, so AppSettings/WiFi credentials in NVS survive
-# re-flashing with this table. The data partition moves and resizes,
+# table on purpose, so AppSettings (and TouchWifiProvisioner's own separate
+# WiFi-credentials namespace — see network/WifiProvisioning.h) in NVS
+# survive re-flashing with this table. The data partition moves and resizes,
 # though — LittleFS won't recognize its old contents there and will
 # reformat itself on next boot (see WeatherHistoryManager::begin()'s
 # fallback path), so the local weather-history log resets to empty. A

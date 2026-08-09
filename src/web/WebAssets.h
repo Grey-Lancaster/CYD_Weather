@@ -54,8 +54,9 @@ dt{color:#96aabe}dd{margin:0}
 <form id="f">
 <div class="card">
 <h2>Network</h2>
-<label>WiFi SSID</label><input name="wifiSsid" maxlength="32" autocomplete="off">
-<label>WiFi password</label><input name="wifiPass" type="password" maxlength="64" autocomplete="new-password">
+<!-- WiFi credentials are set on-device via the touchscreen picker (see
+     network/WifiProvisioning.h) — not here, and not in this settings blob
+     at all, so there's exactly one place they can live. -->
 <label>Hostname</label><input name="hostname" maxlength="23">
 <label>NTP server</label><input name="ntpServer" maxlength="47" placeholder="pool.ntp.org">
 </div>

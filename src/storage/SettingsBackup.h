@@ -7,8 +7,10 @@
 // Full-fidelity JSON (de)serialization of AppSettings, for backup/restore.
 // Unlike the web API's live-settings endpoints (WebPortal::handleGetSettings
 // et al.), which expose only a UI-relevant subset with secrets masked, this
-// covers every persisted field with the real WiFi password and API keys
-// included — a restore that can't reconnect to WiFi isn't much of a backup.
+// covers every persisted field with the real API keys included. WiFi
+// credentials are NOT part of this — they live in TouchWifiProvisioner's own
+// storage (see network/WifiProvisioning.h), independent of AppSettings, so a
+// settings restore doesn't touch them either way.
 // Shared by both backup destinations the web UI offers: a browser download
 // (WebPortal's /api/settings/backup + /restore) and an SD card file
 // (storage/SdCardManager), so the on-disk format is identical either way.
@@ -25,7 +27,7 @@ void toJson(const AppSettings& s, JsonDocument& doc);
 // absent from doc (e.g. an older backup, or one missing a key by accident)
 // are left unchanged. Returns false if doc doesn't look like a settings
 // backup at all — checked via the one field every schema this project has
-// shipped has always had: settings.wifiSsid.
+// shipped has always had: settings.hostname.
 bool fromJson(const JsonDocument& doc, AppSettings& s);
 
 }  // namespace SettingsBackup

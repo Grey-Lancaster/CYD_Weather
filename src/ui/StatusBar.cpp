@@ -88,16 +88,9 @@ void StatusBar::render(bool force) {
     case NetState::Connected:
       dotColor = t.ok;
       break;
-    case NetState::Connecting:
-      dotColor = t.warn;
-      break;
     case NetState::Disconnected:
       dotColor = t.error;
       break;
-    case NetState::ApMode:
-      dotColor = t.accent;
-      break;
-    case NetState::Idle:
     default:
       break;
   }

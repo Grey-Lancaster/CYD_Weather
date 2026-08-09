@@ -1,8 +1,12 @@
 // ============================================================================
 // CYD Weather — composition root.
-// Owns one instance of every manager, wires dependencies and callbacks, and
-// registers all periodic work with the cooperative scheduler. loop() never
-// blocks: every subsystem is polled through TaskScheduler.
+// Two-phase boot: until WiFi connects, network/WifiProvisioning.h's
+// TouchWifiProvisioner-backed on-device picker owns the screen (LVGL) and
+// drives loop(). Once connected, startApp() runs the rest of this file's
+// original setup() — pages, the scheduler, the web portal — and loop()
+// switches over to the cooperative TaskScheduler for good. LVGL is never
+// touched again after that handoff; see README's architecture notes for why
+// the app itself draws directly via TFT_eSPI instead of LVGL.
 // ============================================================================
 #include <Arduino.h>
 
@@ -12,6 +16,7 @@
 #include "display/TouchManager.h"
 #include "network/NetworkManager.h"
 #include "network/TimeManager.h"
+#include "network/WifiProvisioning.h"
 #include "pages/CurrentConditionsPage.h"
 #include "pages/ForecastPage.h"
 #include "pages/HourlyForecastPage.h"
@@ -19,7 +24,6 @@
 #include "pages/PageDayHourly.h"
 #include "pages/PageManager.h"
 #include "pages/PageSunMoon.h"
-#include "pages/SetupPage.h"
 #include "pages/SystemPage.h"
 #include "pages/WeatherTrendsPage.h"
 #include "storage/SdCardManager.h"
@@ -61,33 +65,29 @@ static WeatherTrendsPage weatherTrendsPage(displayManager);
 static PageSunMoon sunMoonPage(displayManager, weatherService);
 static PageAlerts alertsPage(displayManager, weatherAlertManager, weatherService);
 static SystemPage systemPage(displayManager, networkManager);
-static SetupPage setupPage(displayManager, networkManager);
 static SettingsConsole settingsConsole;
 static TaskScheduler scheduler;
 // Tracks weatherProvider as of the last-applied settings change, purely so
 // webPortal.onSettingsChanged() (below) can tell "the provider changed" from
 // "some unrelated setting changed" and only force an immediate refetch for
-// the former — set from the loaded settings in setup(), before that
+// the former — set from the loaded settings in startApp(), before that
 // callback is ever registered.
 static uint8_t lastAppliedWeatherProvider = 0;
+static bool appStarted = false;
 
-void setup() {
-  Log::begin(cfg::serial::BAUD);
-  LOGI(TAG, "%s v%s (built %s)", FW_NAME, FW_VERSION, FW_BUILD_DATE);
+// Fires once, the first time WiFi connects (see WifiProvisioning::begin()'s
+// callback contract) — starts everything that only makes sense once online:
+// weather fetching, the page UI, the scheduler, the web portal. Runs from
+// inside WifiProvisioning::loop() (via TouchWifiProvisioner's connected
+// callback), itself called from loop() below while !appStarted.
+static void startApp(const String& ip) {
+  if (appStarted) return;
+  appStarted = true;
+  LOGI(TAG, "WiFi connected (ip=%s), starting app", ip.c_str());
 
   SettingsManager& settingsManager = SettingsManager::instance();
-  settingsManager.loadSettings();
   const AppSettings& settings = settingsManager.get();
-  Log::setLevel(static_cast<LogLevel>(settings.logLevel));
-  setActiveTheme(settings.theme);
 
-  displayManager.begin(settings);
-  touchManager.begin(settings);
-  // SD card and touch share a physical SPI peripheral on different pin
-  // mappings (see storage/SdCardManager's class comment) — hand the bus back
-  // to touch immediately after any SD access.
-  sdCardManager.onBusReleased([]() { touchManager.reacquireBus(); });
-  pinMode(cfg::pins::BOOT_BUTTON, INPUT_PULLUP);
   weatherService.begin();
   weatherService.setRefreshInterval(settings.weatherRefreshS);
   WeatherHistoryManager::instance().begin();
@@ -95,8 +95,8 @@ void setup() {
   lastAppliedWeatherProvider = settings.weatherProvider;
 
   // ForecastPage is added first so it's page index 0 (Page 1) — the device
-  // boots directly into it, no splash screen. CurrentConditionsPage is
-  // page index 1 (Page 2).
+  // lands directly on it, no splash screen. CurrentConditionsPage is page
+  // index 1 (Page 2).
   pageManager.addPage(&forecastPage);
   pageManager.addPage(&currentConditionsPage);
   pageManager.addPage(&hourlyForecastPage);
@@ -104,20 +104,18 @@ void setup() {
   pageManager.addPage(&sunMoonPage);
   pageManager.addPage(&alertsPage);
   // Reached only by tapping a card on ForecastPage (see the onDayTapped
-  // wiring below) — not part of the rotation, same as setupPage.
+  // wiring below) — not part of the rotation.
   pageManager.addPage(&dayHourlyPage, /*rotatable=*/false);
-  pageManager.addPage(&setupPage, /*rotatable=*/false);
   // Reached only via the physical BOOT button (see the "boot.button"
   // scheduler task below) — pulled out of the normal swipe/tap rotation so
-  // it no longer shows up as one of the dashboard's page-indicator dots.
+  // it doesn't show up as one of the dashboard's page-indicator dots.
   pageManager.addPage(&systemPage, /*rotatable=*/false);
   pageManager.setActive((uint8_t)0);
   pageManager.setAutoRotate(settings.autoPageRotation != 0, settings.pageDurationS);
 
   // Drill-down from a tapped 5-Day-Forecast card into that day's hourly
-  // breakdown, and back again — same cross-page-navigation-via-callback
-  // pattern as the setup-page wiring below (this page doesn't hold a
-  // PageManager/PageDayHourly reference itself).
+  // breakdown, and back again (this page doesn't hold a PageManager/
+  // PageDayHourly reference itself).
   forecastPage.onDayTapped([](uint8_t dayIndex) {
     dayHourlyPage.setDayIndex(dayIndex);
     pageManager.setActive(&dayHourlyPage);
@@ -156,22 +154,15 @@ void setup() {
     }
     timeManager.applySettings(current);  // re-syncs immediately if server/timezone changed
   });
-  // First-run UX: entering AP mode lands on the setup page; a successful
-  // connection returns home (only if the setup page is still showing).
-  // Also where NTP sync is kicked off (see network/TimeManager.h) — fires on
-  // every Connected transition, not just the first, so a reconnect after a
-  // WiFi outage doubles as a retry if the last sync never landed.
-  // Wired before networkManager.begin() so a first-boot AP fallback fires it.
+  // Kicks off NTP sync on every Connected transition, not just this first
+  // one — a reconnect after a WiFi outage doubles as a retry if the last
+  // sync never landed. Registered before networkManager.begin() so this
+  // very first (already-true) transition fires it too.
   networkManager.onStateChange([](NetState state) {
-    if (state == NetState::ApMode) {
-      pageManager.setActive(&setupPage);
-    } else if (state == NetState::Connected) {
-      timeManager.requestSync();
-      if (pageManager.activePage() == &setupPage) pageManager.setActive(&forecastPage);
-    }
+    if (state == NetState::Connected) timeManager.requestSync();
   });
-
   networkManager.begin(settings);
+
   webPortal.begin();
 
   scheduler.add("web.handle", cfg::sched::WEB_HANDLE_MS, []() { webPortal.handle(); });
@@ -181,9 +172,10 @@ void setup() {
   // normal page rotation (see pageManager.addPage(&systemPage, ...) above);
   // calling setActive() again while already on that page is a harmless
   // no-op, so no extra debounce handling is needed beyond the natural ~20ms
-  // poll step. Holding it for FACTORY_RESET_HOLD_MS wipes settings and
-  // reboots — replaces the web UI's old Factory Reset button so a reset
-  // requires physical access to the device rather than just its web portal.
+  // poll step. Holding it for FACTORY_RESET_HOLD_MS wipes settings *and*
+  // the WiFi credentials TouchWifiProvisioner stores separately (see
+  // WifiProvisioning::reset() — otherwise they'd survive a factory reset as
+  // a surprising leftover) and reboots.
   scheduler.add("boot.button", cfg::sched::BOOT_BUTTON_POLL_MS, []() {
     static bool wasPressed = false;
     static uint32_t pressedAtMs = 0;
@@ -199,6 +191,7 @@ void setup() {
       LOGW(TAG, "boot button held %lu ms, factory resetting",
            (unsigned long)cfg::sys::FACTORY_RESET_HOLD_MS);
       SettingsManager::instance().factoryReset();
+      WifiProvisioning::reset();
       Serial.flush();
       ESP.restart();
     }
@@ -271,6 +264,34 @@ void setup() {
        (unsigned long)ESP.getFreeHeap());
 }
 
+void setup() {
+  Log::begin(cfg::serial::BAUD);
+  LOGI(TAG, "%s v%s (built %s)", FW_NAME, FW_VERSION, FW_BUILD_DATE);
+
+  SettingsManager& settingsManager = SettingsManager::instance();
+  settingsManager.loadSettings();
+  const AppSettings& settings = settingsManager.get();
+  Log::setLevel(static_cast<LogLevel>(settings.logLevel));
+  setActiveTheme(settings.theme);
+
+  displayManager.begin(settings);
+  touchManager.begin(settings);
+  // SD card and touch share a physical SPI peripheral on different pin
+  // mappings (see storage/SdCardManager's class comment) — hand the bus back
+  // to touch immediately after any SD access.
+  sdCardManager.onBusReleased([]() { touchManager.reacquireBus(); });
+  pinMode(cfg::pins::BOOT_BUTTON, INPUT_PULLUP);
+
+  // WiFi provisioning owns the screen (LVGL) until connected — see
+  // network/WifiProvisioning.h and this file's own top comment. startApp()
+  // runs everything else once that happens.
+  WifiProvisioning::begin(displayManager, touchManager, settings.hostname, startApp);
+}
+
 void loop() {
-  scheduler.loop();
+  if (!appStarted) {
+    WifiProvisioning::loop();
+  } else {
+    scheduler.loop();
+  }
 }

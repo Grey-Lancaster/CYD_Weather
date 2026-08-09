@@ -10,18 +10,24 @@
 // To evolve the schema:
 //  1. Append new fields at the end of AppSettings (never reorder/resize
 //     existing fields — that would break the migration path below).
+//     Removing a field (see schema 14's wifiSsid/wifiPass removal) is also
+//     fine — the migration function below maps old fields to new ones by
+//     name, not by position, so it just stops copying the dropped one(s).
 //  2. Bump cfg::storage::SETTINGS_SCHEMA.
 //  3. In SettingsManager.cpp, freeze the *previous* layout as AppSettingsVN
 //     (copy AppSettings verbatim before you touch it) and add a migration
 //     branch in begin() that reads the old layout and copies its fields
 //     forward, defaulting only the new ones. See the V1 handling for the
 //     pattern. This is what lets existing installs pick up new firmware
-//     without losing WiFi credentials or other prior settings.
+//     without losing prior settings.
 struct AppSettings {
   uint32_t magic;
   uint16_t schemaVersion;
-  char wifiSsid[33];
-  char wifiPass[65];
+  // WiFi credentials used to live here (wifiSsid/wifiPass) — as of schema
+  // 14 they're owned entirely by TouchWifiProvisioner's own on-device
+  // picker (see network/WifiProvisioning.h), which persists them in its
+  // own separate NVS namespace ("wifiprov") so there's exactly one place
+  // they can live, not two that could drift out of sync.
   char hostname[24];
   uint8_t brightness;      // active backlight level
   uint8_t dimBrightness;   // backlight level when auto-dimmed
@@ -95,6 +101,7 @@ struct AppSettings {
                            // variants that report X left-right backwards
   // --- schema 13 additions ---
   uint8_t hour12;  // 0 = 24-hour clock, 1 = 12-hour with AM/PM (ui/StatusBar.cpp)
+  // --- schema 14: wifiSsid/wifiPass removed (see the struct-top comment) ---
 };
 
 // Owns the one persisted settings blob for the device. Reached via

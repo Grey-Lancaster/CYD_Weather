@@ -2,8 +2,8 @@
 
 // Semantic firmware version — bump on every release.
 #define FW_VERSION_MAJOR 1
-#define FW_VERSION_MINOR 0
-#define FW_VERSION_PATCH 9
+#define FW_VERSION_MINOR 1
+#define FW_VERSION_PATCH 3
 
 #define FW_STRINGIFY2(x) #x
 #define FW_STRINGIFY(x) FW_STRINGIFY2(x)

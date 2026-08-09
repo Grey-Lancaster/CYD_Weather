@@ -8,9 +8,9 @@
 
 // Reached only by tapping a day tile on the 5 Day Forecast page (see
 // pages/ForecastPage.h's onDayTapped callback, wired in main.cpp) — not
-// part of the normal page rotation (registered with rotatable=false, same
-// as pages/SetupPage.h, so it never shows a page-indicator dot and
-// auto-rotation can't land on or leave it on a timer).
+// part of the normal page rotation (registered with rotatable=false, so it
+// never shows a page-indicator dot and auto-rotation can't land on or leave
+// it on a timer).
 //
 // Shows every fetched hour of one specific day, sliced out of
 // WeatherData::hourly by scanning for "00:00" boundaries — see

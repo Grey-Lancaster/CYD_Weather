@@ -43,6 +43,15 @@ class TouchManager {
   void onActivity(ActivityCallback cb) { _onActivity = cb; }
   bool isTouched() const { return _wasTouched; }
 
+  // Bypasses the tap/swipe gesture layer for LVGL's touch-indev read
+  // callback (see network/WifiProvisioning.cpp) — same already-initialized
+  // XPT2046 instance and calibration/rotation mapping as poll(), just a
+  // direct "is it pressed, and where" query instead of gesture detection.
+  // Only ever called during the pre-connect provisioning phase, before the
+  // "touch.poll" scheduler task (which drives poll() instead) exists, so
+  // there's no double-read of the touch controller between the two.
+  bool rawTouch(Point& outPoint);
+
  private:
   Point mapRawToScreen(int16_t rawX, int16_t rawY) const;
 

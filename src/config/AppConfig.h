@@ -71,28 +71,11 @@ constexpr uint16_t RAW_Y_MIN = 240;
 constexpr uint16_t RAW_Y_MAX = 3800;
 }
 
-namespace net {
-constexpr uint32_t CONNECT_TIMEOUT_MS = 15000;
-constexpr uint8_t MAX_CONNECT_ATTEMPTS = 3;
-constexpr uint32_t RETRY_DELAY_MS = 10000;
-constexpr uint32_t AP_STA_RETRY_MS = 5u * 60u * 1000u;  // 0 = never retry STA from AP mode
-constexpr const char* AP_SSID_PREFIX = "CYD-";
-constexpr const char* AP_PASSWORD = "cyd-setup";  // WPA2 requires >= 8 chars
-// Baked-in home network credentials, seeded into AppSettings on first boot
-// (SettingsManager::applyDefaults()) so this build connects immediately
-// instead of starting the setup AP. Still changeable later via the web
-// portal like any other setting.
-constexpr const char* DEFAULT_WIFI_SSID = "shop2";
-constexpr const char* DEFAULT_WIFI_PASSWORD = "mine0313";
-}
-
 namespace web {
 constexpr uint16_t PORT = 80;
-constexpr uint16_t DNS_PORT = 53;           // captive-portal DNS (AP mode only)
 constexpr const char* PASS_MASK = "********";
 constexpr uint32_t RESTART_DELAY_MS = 600;  // lets the HTTP response flush first
 constexpr uint32_t APPLY_DELAY_MS = 800;    // settings apply after the response is sent
-                                            // (applying may drop AP/WiFi mid-request)
 }
 
 namespace sched {
@@ -159,7 +142,7 @@ constexpr uint32_t SETTINGS_MAGIC = 0x43594431;  // "CYD1"
 // Bump on every AppSettings layout change. SettingsManager migrates forward
 // from any older schema it recognizes (see storage/SettingsManager.cpp) so
 // existing installs keep their WiFi credentials and other settings.
-constexpr uint16_t SETTINGS_SCHEMA = 13;
+constexpr uint16_t SETTINGS_SCHEMA = 14;
 }
 
 namespace sdcard {

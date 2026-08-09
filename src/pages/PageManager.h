@@ -13,8 +13,9 @@ class PageManager {
 
   // `rotatable` marks whether next()/prev() (tap/swipe-advance and
   // auto-rotation) may land on this page. Pages only reachable via an
-  // explicit state change (e.g. SetupPage, shown while the network is in AP
-  // mode) should pass false.
+  // explicit state change or action (e.g. SystemPage, reached via the BOOT
+  // button; PageDayHourly, reached by tapping a forecast day) should pass
+  // false.
   bool addPage(Page* page, bool rotatable = true);
   void setActive(uint8_t index);
   bool setActive(Page* page);  // by identity; false if not registered
@@ -24,7 +25,7 @@ class PageManager {
   uint8_t pageCount() const { return _count; }
   uint8_t activeIndex() const { return _active; }
   // 0-based position and total count among *rotatable* pages only — the page
-  // dots. Returns false if the active page isn't rotatable (e.g. SetupPage),
+  // dots. Returns false if the active page isn't rotatable (e.g. SystemPage),
   // in which case no indicator should be drawn.
   bool rotatablePosition(uint8_t& current, uint8_t& total) const;
 
