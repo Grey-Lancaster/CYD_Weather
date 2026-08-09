@@ -3,6 +3,9 @@
 All notable changes to this project are documented here. Forked from
 [HenrysCat/CYD-Weather-Dashboard](https://github.com/HenrysCat/CYD-Weather-Dashboard)
 at v1.0.0; versions from 1.0.1 onward are local fixes on top of that base.
+Patch is bumped by 4 on each release, carrying into minor odometer-style
+once patch would reach double digits (e.g. `1.0.9` + one release =
+`1.1.3`, not `1.0.13`).
 
 ## [1.0.1] - 2026-08-09
 
