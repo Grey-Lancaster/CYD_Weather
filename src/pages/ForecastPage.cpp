@@ -5,6 +5,7 @@
 #include "storage/SettingsManager.h"
 #include "ui/WeatherIconTheme.h"
 #include "ui/Widgets.h"
+#include "utils/Format.h"
 #include "weather/WeatherIcons.h"
 #include "weather/WeatherUnits.h"
 
@@ -205,7 +206,9 @@ void ForecastPage::render(bool full) {
   // needs to show.
   char updated[24];
   if (d.valid) {
-    snprintf(updated, sizeof(updated), "Updated %s", d.lastUpdate);
+    char clock[10];
+    fmt::clockTime(clock, sizeof(clock), d.lastUpdate, settings.hour12 != 0);
+    snprintf(updated, sizeof(updated), "Updated %s", clock);
   } else {
     strlcpy(updated, offline ? "No data (offline)" : "Fetching...", sizeof(updated));
   }

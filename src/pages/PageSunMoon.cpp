@@ -4,6 +4,7 @@
 
 #include "storage/SettingsManager.h"
 #include "ui/Widgets.h"
+#include "utils/Format.h"
 
 namespace {
 
@@ -507,7 +508,9 @@ void PageSunMoon::render(bool full) {
   // ui/StatusBar.cpp). Same treatment as ForecastPage.cpp.
   char updated[24];
   if (d.valid) {
-    snprintf(updated, sizeof(updated), "Updated %s", d.lastUpdate);
+    char clock[10];
+    fmt::clockTime(clock, sizeof(clock), d.lastUpdate, settings.hour12 != 0);
+    snprintf(updated, sizeof(updated), "Updated %s", clock);
   } else {
     strlcpy(updated, offline ? "No data (offline)" : "Fetching...", sizeof(updated));
   }

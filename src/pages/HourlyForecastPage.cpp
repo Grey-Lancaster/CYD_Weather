@@ -5,6 +5,7 @@
 #include "storage/SettingsManager.h"
 #include "ui/WeatherIconTheme.h"
 #include "ui/Widgets.h"
+#include "utils/Format.h"
 #include "weather/WeatherIcons.h"
 #include "weather/WeatherUnits.h"
 
@@ -123,7 +124,7 @@ void drawHourlyCardBackground(TFT_eSPI& gfx, int32_t x, int32_t y, int32_t w, in
 // of ui::renderRegion(), which is what makes each card's redraw appear
 // atomically instead of a visible erase-then-rebuild flicker.
 void drawHourlyCard(TFT_eSPI& gfx, int32_t x, int32_t y, const HourlyForecastEntry& h,
-                    bool highlight, TempUnit tempUnit, WindUnit windUnit) {
+                    bool highlight, TempUnit tempUnit, WindUnit windUnit, bool hour12) {
   const Theme& t = theme();
   const int32_t cx = x + kCardW / 2;
 
@@ -139,7 +140,9 @@ void drawHourlyCard(TFT_eSPI& gfx, int32_t x, int32_t y, const HourlyForecastEnt
   gfx.setTextFont(kHeaderFont);
   gfx.setTextDatum(TC_DATUM);
   gfx.setTextColor(highlight ? t.accent : t.textPrimary);
-  gfx.drawString(h.time, cx, y + kTimeOffsetY);
+  char clock[10];
+  fmt::clockTime(clock, sizeof(clock), h.time, hour12);
+  gfx.drawString(clock, cx, y + kTimeOffsetY);
 
   const WeatherIconId icon = getWeatherIcon(h.weatherCode, h.isDay);
   ui::drawWeatherIcon(gfx, cx, y + kIconOffsetY, kIconR, icon);
@@ -234,7 +237,9 @@ void HourlyForecastPage::render(bool full) {
   // needs to show. Same treatment as ForecastPage.cpp.
   char updated[24];
   if (d.valid) {
-    snprintf(updated, sizeof(updated), "Updated %s", d.lastUpdate);
+    char clock[10];
+    fmt::clockTime(clock, sizeof(clock), d.lastUpdate, settings.hour12 != 0);
+    snprintf(updated, sizeof(updated), "Updated %s", clock);
   } else {
     strlcpy(updated, offline ? "No data (offline)" : "Fetching...", sizeof(updated));
   }
@@ -264,7 +269,7 @@ void HourlyForecastPage::render(bool full) {
   for (uint8_t slot = 0; slot < visible; slot++) {
     const uint8_t hourIndex = start + slot;
     drawHourlyCard(tft, cardX(slot), kCardsY0, d.hourly[hourIndex], /*highlight=*/hourIndex == 0,
-                  tempUnit, windUnit);
+                  tempUnit, windUnit, settings.hour12 != 0);
   }
   if (visible < kVisibleCards) {
     // Fewer cards than last time (rare — only if hourlyCount shrinks between

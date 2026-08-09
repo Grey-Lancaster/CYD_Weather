@@ -5,6 +5,7 @@
 #include "storage/SettingsManager.h"
 #include "ui/WeatherIconTheme.h"
 #include "ui/Widgets.h"
+#include "utils/Format.h"
 #include "weather/WeatherIcons.h"
 #include "weather/WeatherUnits.h"
 
@@ -179,7 +180,10 @@ void CurrentConditionsPage::render(bool full) {
   drawStat(tft, gridColCx(1), gridRowY(3), "UV Index", uvIndex);
 
   char status[32];
-  snprintf(status, sizeof(status), "Updated %s", d.valid ? d.lastUpdate : "--:--");
+  char updatedClock[10];
+  fmt::clockTime(updatedClock, sizeof(updatedClock), d.valid ? d.lastUpdate : "--:--",
+                settings.hour12 != 0);
+  snprintf(status, sizeof(status), "Updated %s", updatedClock);
   tft.setTextFont(t.fontSmall);
   tft.setTextDatum(BC_DATUM);
   tft.setTextColor(offline ? t.warn : t.textSecondary, t.bg);

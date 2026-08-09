@@ -7,6 +7,22 @@ Patch is bumped by 4 on each release, carrying into minor odometer-style
 once patch would reach double digits (e.g. `1.0.9` + one release =
 `1.1.3`, not `1.0.13`).
 
+## [1.1.7] - 2026-08-09
+
+### Fixed
+- Weather alert headlines (Heat Warning, Cold Warning, Ice Risk) always
+  showed Celsius regardless of `AppSettings::tempUnit` — they now use the
+  same `convertTempC`/`tempUnitSuffix` conversion every page already uses.
+- Hourly Forecast card times and every "Updated HH:MM" label ignored the
+  12-hour clock setting added in 1.0.9 — they read `hour12` now (new
+  `fmt::clockTime()` helper in `utils/Format.h`). The underlying stored
+  time strings stay 24-hour always (day-boundary detection and sun/moon
+  time math parse them directly) — only the point of drawing reformats.
+
+### Known issue
+- Sun & Moon's Sunrise/Sunset/Moonrise/Moonset times are still always
+  24-hour, same underlying bug — not covered by this fix.
+
 ## [1.1.3] - 2026-08-09
 
 ### Changed

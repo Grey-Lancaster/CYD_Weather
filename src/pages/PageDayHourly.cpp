@@ -5,6 +5,7 @@
 #include "storage/SettingsManager.h"
 #include "ui/WeatherIconTheme.h"
 #include "ui/Widgets.h"
+#include "utils/Format.h"
 #include "weather/WeatherIcons.h"
 #include "weather/WeatherUnits.h"
 
@@ -119,7 +120,7 @@ void drawHourlyCardBackground(TFT_eSPI& gfx, int32_t x, int32_t y, int32_t w, in
 // lets render() double-buffer each card through ui::renderRegion() instead
 // of a visible erase-then-rebuild flicker).
 void drawHourlyCard(TFT_eSPI& gfx, int32_t x, int32_t y, const HourlyForecastEntry& h,
-                    bool highlight, TempUnit tempUnit, WindUnit windUnit) {
+                    bool highlight, TempUnit tempUnit, WindUnit windUnit, bool hour12) {
   const Theme& t = theme();
   const int32_t cx = x + kCardW / 2;
 
@@ -130,7 +131,9 @@ void drawHourlyCard(TFT_eSPI& gfx, int32_t x, int32_t y, const HourlyForecastEnt
   gfx.setTextFont(kHeaderFont);
   gfx.setTextDatum(TC_DATUM);
   gfx.setTextColor(highlight ? t.accent : t.textPrimary);
-  gfx.drawString(h.time, cx, y + kTimeOffsetY);
+  char clock[10];
+  fmt::clockTime(clock, sizeof(clock), h.time, hour12);
+  gfx.drawString(clock, cx, y + kTimeOffsetY);
 
   const WeatherIconId icon = getWeatherIcon(h.weatherCode, h.isDay);
   ui::drawWeatherIcon(gfx, cx, y + kIconOffsetY, kIconR, icon);
@@ -300,7 +303,8 @@ void PageDayHourly::render(bool full) {
     // a future day is equally "not yet happened", so nothing is highlighted
     // there.
     const bool highlight = _dayIndex == 0 && hourIndex == 0;
-    drawHourlyCard(tft, cardX(slot), kCardsY0, d.hourly[hourIndex], highlight, tempUnit, windUnit);
+    drawHourlyCard(tft, cardX(slot), kCardsY0, d.hourly[hourIndex], highlight, tempUnit, windUnit,
+                  settings.hour12 != 0);
   }
   if (visible < kVisibleCards) {
     const int32_t clearX = cardX(visible);

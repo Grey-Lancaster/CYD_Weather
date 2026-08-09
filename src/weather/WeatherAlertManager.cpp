@@ -6,6 +6,7 @@
 #include "storage/SettingsManager.h"
 #include "storage/WeatherHistoryManager.h"
 #include "utils/Log.h"
+#include "weather/WeatherUnits.h"
 
 static const char* TAG = "ALERT";
 
@@ -222,7 +223,9 @@ void WeatherAlertManager::evaluate(const WeatherData& data) {
                 (isFreezingCode(hh.weatherCode) || hh.rainProbabilityPct >= 40);
         });
         pushCandidate(candidates, count, AlertType::IceRisk, dur,
-                      "Temperatures near %.0fC with wet conditions", (double)h.temperatureC);
+                      "Temperatures near %.0f%s with wet conditions",
+                      (double)convertTempC(h.temperatureC, (TempUnit)settings.tempUnit),
+                      tempUnitSuffix((TempUnit)settings.tempUnit));
         break;
       }
     }
@@ -234,13 +237,21 @@ void WeatherAlertManager::evaluate(const WeatherData& data) {
     const float todayHigh = data.dailyCount > 0 ? data.daily[0].highC : feelsLike;
     const float todayLow = data.dailyCount > 0 ? data.daily[0].lowC : feelsLike;
 
+    // Threshold comparisons above/below stay in Celsius (that's how
+    // AppSettings::alertHeatWarningC/alertColdWarningC are stored) — only
+    // the displayed message text needs to respect the user's tempUnit.
+    const auto tempUnit = (TempUnit)settings.tempUnit;
     if (feelsLike >= settings.alertHeatWarningC || todayHigh >= settings.alertHeatWarningC) {
-      pushCandidate(candidates, count, AlertType::HeatWarning, 0, "Feels like %.0fC, high of %.0fC expected",
-                    (double)feelsLike, (double)todayHigh);
+      pushCandidate(candidates, count, AlertType::HeatWarning, 0,
+                    "Feels like %.0f%s, high of %.0f%s expected",
+                    (double)convertTempC(feelsLike, tempUnit), tempUnitSuffix(tempUnit),
+                    (double)convertTempC(todayHigh, tempUnit), tempUnitSuffix(tempUnit));
     }
     if (feelsLike <= settings.alertColdWarningC || todayLow <= settings.alertColdWarningC) {
-      pushCandidate(candidates, count, AlertType::ColdWarning, 0, "Feels like %.0fC, low of %.0fC expected",
-                    (double)feelsLike, (double)todayLow);
+      pushCandidate(candidates, count, AlertType::ColdWarning, 0,
+                    "Feels like %.0f%s, low of %.0f%s expected",
+                    (double)convertTempC(feelsLike, tempUnit), tempUnitSuffix(tempUnit),
+                    (double)convertTempC(todayLow, tempUnit), tempUnitSuffix(tempUnit));
     }
   }
 
