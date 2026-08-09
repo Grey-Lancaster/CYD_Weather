@@ -216,3 +216,44 @@ load();refresh();checkSdCard();setInterval(refresh,5000);
 </body>
 </html>
 )HTML";
+
+// Screen-mirror viewer — a live-ish snapshot of the TFT for showing someone
+// else what's on the device without a camera. Reachable at GET /mirror; the
+// actual image comes from GET /mirror.bmp (see WebPortal::handleMirrorImage,
+// which reads the panel back over SPI row-by-row — no framebuffer exists to
+// read from directly, see DisplayManager's class comment).
+static const char WEB_MIRROR_HTML[] PROGMEM = R"HTML(<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CYD Weather — Screen Mirror</title>
+<style>
+:root{color-scheme:dark}
+body{font-family:system-ui,sans-serif;background:#12161c;color:#e8eaed;margin:0 auto;padding:1rem;max-width:480px;text-align:center}
+h1{font-size:1.1rem;margin-bottom:.2rem}
+img{width:100%;border:1px solid #2c3644;border-radius:6px;image-rendering:pixelated;margin-top:.6rem}
+.row{display:flex;gap:.6rem;justify-content:center;align-items:center;margin-top:.6rem}
+button{padding:.5rem 1rem;border-radius:6px;border:1px solid #2c3644;background:#1c232e;color:#e8eaed;font-size:1rem}
+label{font-size:.85rem;color:#96aabe;display:flex;align-items:center;gap:.4rem}
+</style>
+</head>
+<body>
+<h1>CYD Weather — Screen Mirror</h1>
+<div class="row">
+<button onclick="refresh()">Refresh</button>
+<label><input type="checkbox" id="auto" onchange="toggleAuto()"> Auto-refresh (2s)</label>
+</div>
+<img id="shot" src="/mirror.bmp" alt="device screen">
+<script>
+function refresh(){document.getElementById('shot').src='/mirror.bmp?'+Date.now()}
+let timer=null;
+function toggleAuto(){
+const on=document.getElementById('auto').checked;
+if(timer){clearInterval(timer);timer=null}
+if(on)timer=setInterval(refresh,2000);
+}
+</script>
+</body>
+</html>
+)HTML";

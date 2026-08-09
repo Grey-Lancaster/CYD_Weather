@@ -271,14 +271,17 @@ constexpr uint8_t BRIGHTNESS = 220;
 constexpr uint8_t DIM_BRIGHTNESS = 15;
 constexpr uint16_t DIM_TIMEOUT_S = 120;
 // Display-compatibility defaults (display/DisplayConfig.h). Chosen to match
-// this board's existing hard-wired behaviour (TFT_INVERSION_ON build flag,
-// TFT_eSPI's default BGR panel order) so first boot looks the same as before
-// these became runtime-configurable.
+// this board's ST7789 panel and its TFT_INVERSION_OFF build flag
+// (platformio.ini) so first boot looks correct without needing the web
+// portal. COLOR_ORDER (BGR) is carried over from this project's original
+// ILI9341_2 config and not yet re-verified against the ST7789 driver —
+// adjust live via the portal if colours look off; it's not a build-time
+// flag, so no reflash is needed either way.
 constexpr bool DISPLAY_FLIPPED = false;  // false = display::ROTATION (USB-right)
 constexpr uint8_t COLOR_ORDER = 1;       // ColorOrder::BGR
 constexpr bool MIRROR_H = false;
 constexpr bool MIRROR_V = false;
-constexpr bool INVERT_COLORS = true;
+constexpr bool INVERT_COLORS = false;
 constexpr bool ROTATE_90 = false;       // MADCTL row/col swap, on top of the flip above
 constexpr bool SWAP_NAVIGATION = false;  // false = swipe-left advances (PageManager::next())
 }

@@ -49,7 +49,7 @@ static WeatherAlertManager weatherAlertManager;
 static WeatherService weatherService;
 static SdCardManager sdCardManager;
 static WebPortal webPortal(SettingsManager::instance(), networkManager, weatherService,
-                           sdCardManager);
+                           sdCardManager, displayManager);
 static StatusBar statusBar(displayManager, networkManager, weatherAlertManager, weatherService,
                            timeManager);
 static PageManager pageManager(displayManager, statusBar);

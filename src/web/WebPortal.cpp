@@ -2,6 +2,8 @@
 
 #include <WiFi.h>
 
+#include <new>
+
 #include "config/AppConfig.h"
 #include "config/Version.h"
 #include "storage/SettingsBackup.h"
@@ -21,9 +23,9 @@ static float clampF(float v, float lo, float hi) {
 }
 
 WebPortal::WebPortal(SettingsManager& settings, NetworkManager& network, WeatherService& weather,
-                     SdCardManager& sdCard)
+                     SdCardManager& sdCard, DisplayManager& display)
     : _settings(settings), _network(network), _weather(weather), _sdCard(sdCard),
-      _http(cfg::web::PORT) {}
+      _display(display), _http(cfg::web::PORT) {}
 
 bool WebPortal::begin() {
   _http.on("/", HTTP_GET, [this]() { handleRoot(); });
@@ -36,6 +38,8 @@ bool WebPortal::begin() {
   _http.on("/api/sdcard/status", HTTP_GET, [this]() { handleSdCardStatus(); });
   _http.on("/api/sdcard/backup", HTTP_POST, [this]() { handleSdCardBackup(); });
   _http.on("/api/sdcard/restore", HTTP_POST, [this]() { handleSdCardRestore(); });
+  _http.on("/mirror", HTTP_GET, [this]() { handleMirror(); });
+  _http.on("/mirror.bmp", HTTP_GET, [this]() { handleMirrorImage(); });
   _http.onNotFound([this]() { handleNotFound(); });
   _http.begin();
   LOGI(TAG, "portal listening on port %u", (unsigned)cfg::web::PORT);
@@ -83,6 +87,144 @@ void WebPortal::redirectToPortal() {
 
 void WebPortal::handleRoot() {
   _http.send_P(200, "text/html", WEB_INDEX_HTML);
+}
+
+void WebPortal::handleMirror() {
+  _http.send_P(200, "text/html", WEB_MIRROR_HTML);
+}
+
+// Streams the current TFT contents as a 24-bit uncompressed BMP. There's no
+// software framebuffer for the whole screen to read from — a full-screen
+// buffer doesn't fit ESP32 heap (see cfg::display::CANVAS_MAX_BYTES's
+// comment in AppConfig.h) — so this reads the panel back over SPI in row
+// chunks via TFT_eSPI's readRectRGB(), converting each chunk from RGB to
+// BMP's BGR byte order and reversing its row order (BMP wants bottom row
+// first) before sending it in one call. Chunked rather than one row at a
+// time — confirmed live that doing this row-by-row (240 separate
+// SPI-read/HTTP-send round trips) took ~20s; batching into kChunkRows-sized
+// chunks (heap-allocated, since kChunkRows*960 bytes is too big to put on
+// the stack safely) cuts that down to a handful of round trips. This still
+// runs synchronously inside the same cooperative main loop as
+// rendering/touch/weather (see TaskScheduler), so the device's UI briefly
+// stalls for the capture — acceptable for an occasional manual snapshot,
+// not meant to be polled quickly or continuously.
+void WebPortal::handleMirrorImage() {
+  TFT_eSPI& tft = _display.tft();
+  const int32_t w = (int32_t)cfg::display::WIDTH;
+  const int32_t h = (int32_t)cfg::display::HEIGHT;
+  const int32_t rowBytes = w * 3;
+  const int32_t rowPad = (4 - (rowBytes % 4)) % 4;
+  const uint32_t pixelDataSize = (uint32_t)(rowBytes + rowPad) * (uint32_t)h;
+  const uint32_t fileSize = 54u + pixelDataSize;
+
+  uint8_t header[54] = {0};
+  header[0] = 'B';
+  header[1] = 'M';
+  auto putU32 = [&](size_t offset, uint32_t v) {
+    header[offset] = (uint8_t)(v & 0xFF);
+    header[offset + 1] = (uint8_t)((v >> 8) & 0xFF);
+    header[offset + 2] = (uint8_t)((v >> 16) & 0xFF);
+    header[offset + 3] = (uint8_t)((v >> 24) & 0xFF);
+  };
+  putU32(2, fileSize);
+  putU32(10, 54);              // bfOffBits
+  putU32(14, 40);              // biSize (BITMAPINFOHEADER)
+  putU32(18, (uint32_t)w);
+  putU32(22, (uint32_t)h);     // positive height = bottom-up row order
+  header[26] = 1;              // biPlanes
+  header[28] = 24;             // biBitCount
+  putU32(34, pixelDataSize);
+
+  _http.setContentLength(fileSize);
+  _http.send(200, "image/bmp", "");
+  _http.sendContent((const char*)header, sizeof(header));
+
+  // TEMP DIAGNOSTIC: ?mode=0..3 selects a candidate colour transform so
+  // several hypotheses can be compared in one flash instead of one per
+  // rebuild. 0=raw passthrough, 1=swap R/B, 2=invert bytes, 3=swap+invert.
+  // Also toggles display inversion off for the read itself, in case this
+  // panel's RAMRD is unreliable while INVON is active.
+  const int debugMode = _http.hasArg("mode") ? _http.arg("mode").toInt() : 1;
+  const bool needsSwap = (debugMode == 1 || debugMode == 3);
+  const bool needsInvert = (debugMode == 2 || debugMode == 3);
+  const bool disableInversionForRead = _http.hasArg("noinv");
+  if (disableInversionForRead) tft.invertDisplay(false);
+
+  constexpr int32_t kChunkRows = 40;  // 40 * 960B = 37.5KB, well clear of ~200KB free heap
+  const bool forceSingleRow = _http.hasArg("single");
+  uint8_t* chunkBuf =
+      forceSingleRow ? nullptr : new (std::nothrow) uint8_t[(size_t)kChunkRows * (size_t)rowBytes];
+  static const uint8_t kPad[3] = {0, 0, 0};
+
+  if (chunkBuf == nullptr) {
+    // Allocation failed (fragmented/low heap) — fall back to the slow but
+    // minimal-memory single-row path rather than failing the capture.
+    uint8_t row[cfg::display::WIDTH * 3];
+    for (int32_t y = h - 1; y >= 0; y--) {
+      tft.readRectRGB(0, y, w, 1, row);
+      if (needsSwap) {
+        for (int32_t x = 0; x < w; x++) {
+          const uint8_t r = row[x * 3];
+          row[x * 3] = row[x * 3 + 2];
+          row[x * 3 + 2] = r;
+        }
+      }
+      if (needsInvert) {
+        for (int32_t i = 0; i < rowBytes; i++) row[i] = (uint8_t)(255 - row[i]);
+      }
+      _http.sendContent((const char*)row, (size_t)rowBytes);
+      if (rowPad > 0) _http.sendContent((const char*)kPad, (size_t)rowPad);
+    }
+    if (disableInversionForRead) tft.invertDisplay(_settings.get().invertColors != 0);
+    return;
+  }
+
+  int32_t yEnd = h;  // exclusive top of the not-yet-sent region
+  while (yEnd > 0) {
+    const int32_t rows = min(kChunkRows, yEnd);
+    const int32_t yStart = yEnd - rows;
+    tft.readRectRGB(0, yStart, w, rows, chunkBuf);
+
+    const int32_t pixelsInChunk = rows * w;
+    if (needsSwap) {
+      for (int32_t p = 0; p < pixelsInChunk; p++) {
+        uint8_t* px = chunkBuf + (size_t)p * 3;
+        const uint8_t r = px[0];
+        px[0] = px[2];
+        px[2] = r;
+      }
+    }
+    if (needsInvert) {
+      const int32_t bytesInChunk = pixelsInChunk * 3;
+      for (int32_t i = 0; i < bytesInChunk; i++) chunkBuf[i] = (uint8_t)(255 - chunkBuf[i]);
+    }
+
+    if (rowPad == 0) {
+      // Common case (true for this panel's fixed 320px width, where
+      // rowBytes is already a multiple of 4): reverse the chunk's row
+      // order in place and ship it as one contiguous write.
+      for (int32_t a = 0, b = rows - 1; a < b; a++, b--) {
+        uint8_t* rowA = chunkBuf + (size_t)a * rowBytes;
+        uint8_t* rowB = chunkBuf + (size_t)b * rowBytes;
+        for (int32_t i = 0; i < rowBytes; i++) {
+          const uint8_t t = rowA[i];
+          rowA[i] = rowB[i];
+          rowB[i] = t;
+        }
+      }
+      _http.sendContent((const char*)chunkBuf, (size_t)rows * (size_t)rowBytes);
+    } else {
+      for (int32_t r = rows - 1; r >= 0; r--) {
+        _http.sendContent((const char*)(chunkBuf + (size_t)r * rowBytes), (size_t)rowBytes);
+        _http.sendContent((const char*)kPad, (size_t)rowPad);
+      }
+    }
+
+    yEnd -= rows;
+  }
+
+  if (disableInversionForRead) tft.invertDisplay(_settings.get().invertColors != 0);
+  delete[] chunkBuf;
 }
 
 void WebPortal::handleStatus() {

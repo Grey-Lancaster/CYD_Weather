@@ -6,6 +6,7 @@
 
 #include <functional>
 
+#include "display/DisplayManager.h"
 #include "network/NetworkManager.h"
 #include "storage/SdCardManager.h"
 #include "storage/SettingsManager.h"
@@ -24,6 +25,11 @@
 //   GET  /api/sdcard/status    {"present": bool}
 //   POST /api/sdcard/backup    write the same backup JSON to the SD card
 //   POST /api/sdcard/restore   read it back from the SD card and apply
+//   GET  /mirror               screen-mirror viewer page (manual/auto refresh)
+//   GET  /mirror.bmp           current TFT contents as a 24-bit BMP, read
+//                              back over SPI row-by-row (no framebuffer
+//                              exists to read from directly) — stalls the
+//                              device's UI/touch for the read duration
 //
 // Factory reset is physical-only: holding the BOOT button for
 // cfg::sys::FACTORY_RESET_HOLD_MS (see main.cpp) wipes settings and reboots
@@ -51,7 +57,7 @@ class WebPortal {
   using SettingsChangedCallback = std::function<void()>;
 
   WebPortal(SettingsManager& settings, NetworkManager& network, WeatherService& weather,
-            SdCardManager& sdCard);
+            SdCardManager& sdCard, DisplayManager& display);
 
   bool begin();
   void handle();  // web.handle task: serve clients + execute deferred restarts
@@ -68,6 +74,8 @@ class WebPortal {
   void handleSdCardStatus();
   void handleSdCardBackup();
   void handleSdCardRestore();
+  void handleMirror();
+  void handleMirrorImage();
   void handleNotFound();
   void sendJson(int code, const JsonDocument& doc);
   void sendOk(bool restartRequired = false);
@@ -79,6 +87,7 @@ class WebPortal {
   NetworkManager& _network;
   WeatherService& _weather;
   SdCardManager& _sdCard;
+  DisplayManager& _display;
   WebServer _http;
   DNSServer _dns;
   SettingsChangedCallback _onSettingsChanged;
