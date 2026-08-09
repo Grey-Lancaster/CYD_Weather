@@ -179,7 +179,11 @@ void HourlyForecastPage::tick(uint32_t nowMs) {
     // One data() copy only when something actually changed — cheap enough
     // (this only happens on a fetch landing, not every tick) and avoids the
     // mutex-guarded full-struct copy on every tick just to read a count.
-    _hourlyCount = _weather.data().hourlyCount;
+    // Capped to the same display limit render() uses — tick()'s window-scroll
+    // math below must stay within the hours actually shown, or _windowStart
+    // can advance past render()'s clamp point and collapse the visible
+    // window to a single card for most of the shift cycle.
+    _hourlyCount = min(_weather.data().hourlyCount, cfg::weather::HOURLY_DISPLAY_COUNT);
     _windowStart = 0;  // fresh data — restart the timeline from "now"
     _lastShiftMs = nowMs;
     dirty = true;

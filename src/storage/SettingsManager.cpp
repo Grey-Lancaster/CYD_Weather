@@ -1108,6 +1108,8 @@ void SettingsManager::applyDefaults() {
   _settings.magic = cfg::storage::SETTINGS_MAGIC;
   _settings.schemaVersion = cfg::storage::SETTINGS_SCHEMA;
   strlcpy(_settings.hostname, cfg::defaults::HOSTNAME, sizeof(_settings.hostname));
+  strlcpy(_settings.wifiSsid, cfg::net::DEFAULT_WIFI_SSID, sizeof(_settings.wifiSsid));
+  strlcpy(_settings.wifiPass, cfg::net::DEFAULT_WIFI_PASSWORD, sizeof(_settings.wifiPass));
   _settings.brightness = cfg::defaults::BRIGHTNESS;
   _settings.dimBrightness = cfg::defaults::DIM_BRIGHTNESS;
   _settings.dimTimeoutS = cfg::defaults::DIM_TIMEOUT_S;

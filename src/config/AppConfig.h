@@ -78,6 +78,12 @@ constexpr uint32_t RETRY_DELAY_MS = 10000;
 constexpr uint32_t AP_STA_RETRY_MS = 5u * 60u * 1000u;  // 0 = never retry STA from AP mode
 constexpr const char* AP_SSID_PREFIX = "CYD-";
 constexpr const char* AP_PASSWORD = "cyd-setup";  // WPA2 requires >= 8 chars
+// Baked-in home network credentials, seeded into AppSettings on first boot
+// (SettingsManager::applyDefaults()) so this build connects immediately
+// instead of starting the setup AP. Still changeable later via the web
+// portal like any other setting.
+constexpr const char* DEFAULT_WIFI_SSID = "shop2";
+constexpr const char* DEFAULT_WIFI_PASSWORD = "mine0313";
 }
 
 namespace web {
