@@ -583,15 +583,27 @@ void PageSunMoon::render(bool full) {
 
   const float dayFrac =
       haveSun && nowMin >= 0 ? (float)(nowMin - sunriseMin) / (float)(sunsetMin - sunriseMin) : -1.0f;
-  drawDaylightBar(tft, ui::layout::CARD_MARGIN_X, kBarY, ui::layout::CARD_W, kBarH,
-                  haveSun ? d.sunriseTime : "--:--", haveSun ? d.sunsetTime : "--:--", dayFrac);
+  // Reformatted for display only — sunriseMin/sunsetMin above already
+  // parsed the raw (always-24h) d.sunriseTime/d.sunsetTime for the actual
+  // math, so reformatting these copies for hour12 can't affect it.
+  const bool hour12 = settings.hour12 != 0;
+  char sunriseDisp[10] = "--:--";
+  char sunsetDisp[10] = "--:--";
+  if (haveSun) {
+    fmt::clockTime(sunriseDisp, sizeof(sunriseDisp), d.sunriseTime, hour12);
+    fmt::clockTime(sunsetDisp, sizeof(sunsetDisp), d.sunsetTime, hour12);
+  }
+  drawDaylightBar(tft, ui::layout::CARD_MARGIN_X, kBarY, ui::layout::CARD_W, kBarH, sunriseDisp,
+                  sunsetDisp, dayFrac);
 
   // ---- Sun stat card.
-  char solarNoon[6] = "--:--";
+  char solarNoon[10] = "--:--";
   char dayLength[10] = "--";
   char remaining[10] = "--";
   if (haveSun) {
-    minutesToHHMM((sunriseMin + sunsetMin) / 2, solarNoon, sizeof(solarNoon));
+    char solarNoon24[6];
+    minutesToHHMM((sunriseMin + sunsetMin) / 2, solarNoon24, sizeof(solarNoon24));
+    fmt::clockTime(solarNoon, sizeof(solarNoon), solarNoon24, hour12);
     formatDuration(sunsetMin - sunriseMin, dayLength, sizeof(dayLength));
     if (isDay && nowMin >= 0) {
       formatDuration(sunsetMin - nowMin, remaining, sizeof(remaining));
@@ -600,25 +612,28 @@ void PageSunMoon::render(bool full) {
     }
   }
   const char* sunLabels[kCardRows] = {"Sunrise", "Solar Noon", "Sunset", "Day Length", "Remaining"};
-  const char* sunValues[kCardRows] = {haveSun ? d.sunriseTime : "--:--", solarNoon,
-                                      haveSun ? d.sunsetTime : "--:--", dayLength, remaining};
+  const char* sunValues[kCardRows] = {sunriseDisp, solarNoon, sunsetDisp, dayLength, remaining};
   drawStatCard(tft, ui::layout::CARD_MARGIN_X, kCardsY0, kCardW, kCardsH, "Sun", sunLabels,
               sunValues);
 
   // ---- Moon stat card.
   char illum[8];
   char age[12];
-  char moonrise[6] = "--:--";
-  char moonset[6] = "--:--";
+  char moonrise[10] = "--:--";
+  char moonset[10] = "--:--";
   snprintf(illum, sizeof(illum), "%ld%%", lroundf(phase.illumPct));
   snprintf(age, sizeof(age), "%.1f days", (double)phase.ageDays);
   if (moonRS.riseValid) {
-    minutesToHHMM((int32_t)lroundf((moonRS.riseUtHours + utcOffsetHours) * 60.0f), moonrise,
-                  sizeof(moonrise));
+    char moonrise24[6];
+    minutesToHHMM((int32_t)lroundf((moonRS.riseUtHours + utcOffsetHours) * 60.0f), moonrise24,
+                  sizeof(moonrise24));
+    fmt::clockTime(moonrise, sizeof(moonrise), moonrise24, hour12);
   }
   if (moonRS.setValid) {
-    minutesToHHMM((int32_t)lroundf((moonRS.setUtHours + utcOffsetHours) * 60.0f), moonset,
-                  sizeof(moonset));
+    char moonset24[6];
+    minutesToHHMM((int32_t)lroundf((moonRS.setUtHours + utcOffsetHours) * 60.0f), moonset24,
+                  sizeof(moonset24));
+    fmt::clockTime(moonset, sizeof(moonset), moonset24, hour12);
   }
   const char* moonLabels[kCardRows] = {"Phase", "Illumination", "Moonrise", "Moonset", "Age"};
   const char* moonValues[kCardRows] = {astro::moonPhaseName(phase.ageDays), illum, moonrise,

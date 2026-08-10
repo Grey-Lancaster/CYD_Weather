@@ -7,6 +7,17 @@ Patch is bumped by 4 on each release, carrying into minor odometer-style
 once patch would reach double digits (e.g. `1.0.9` + one release =
 `1.1.3`, not `1.0.13`).
 
+## [1.2.1] - 2026-08-10
+
+### Fixed
+- Sun & Moon's Sunrise/Sunset/Moonrise/Moonset times (and the daylight bar's
+  end labels) ignored the 12-hour clock setting, same underlying issue as
+  1.1.7's Hourly Forecast/"Updated" fix — now reformatted via
+  `fmt::clockTime()` at display time, same as everywhere else. The
+  underlying parsed minutes-of-day used for the daylight-bar math and
+  remaining-daylight countdown are computed before this reformatting, so
+  the fix is display-only.
+
 ## [1.1.7] - 2026-08-09
 
 ### Fixed
