@@ -88,6 +88,12 @@ static void startApp(const String& ip) {
   SettingsManager& settingsManager = SettingsManager::instance();
   const AppSettings& settings = settingsManager.get();
 
+  // Undo WifiProvisioning::begin()'s forced rotation(3)/no-mirror override
+  // (see its comment) — restores this app's own configured orientation
+  // before any page ever draws.
+  displayManager.applySettings(settings);
+  touchManager.setProvisioningRotation(false);
+
   weatherService.begin();
   weatherService.setRefreshInterval(settings.weatherRefreshS);
   WeatherHistoryManager::instance().begin();

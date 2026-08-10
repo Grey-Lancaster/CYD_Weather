@@ -260,9 +260,9 @@ constexpr uint16_t DIM_TIMEOUT_S = 120;
 // ILI9341_2 config and not yet re-verified against the ST7789 driver —
 // adjust live via the portal if colours look off; it's not a build-time
 // flag, so no reflash is needed either way.
-constexpr bool DISPLAY_FLIPPED = false;  // false = display::ROTATION (USB-right)
+constexpr bool DISPLAY_FLIPPED = true;   // true = display::ROTATION_FLIPPED (USB-left, 180°)
 constexpr uint8_t COLOR_ORDER = 1;       // ColorOrder::BGR
-constexpr bool MIRROR_H = false;
+constexpr bool MIRROR_H = true;
 constexpr bool MIRROR_V = false;
 constexpr bool INVERT_COLORS = false;
 constexpr bool ROTATE_90 = false;       // MADCTL row/col swap, on top of the flip above

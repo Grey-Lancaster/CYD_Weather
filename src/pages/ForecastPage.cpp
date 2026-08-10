@@ -73,6 +73,19 @@ void drawForecastCardBackground(TFT_eSPI& gfx, int32_t x, int32_t y, int32_t w, 
   const uint16_t topColour = highlight ? blend565(baseTop, t.accent, 0.25f) : baseTop;
   const uint16_t bottomColour = highlight ? blend565(baseBottom, t.accent, 0.12f) : baseBottom;
 
+  // Light theme's surface/bg/textPrimary sit too close together in RGB565 to
+  // render this gradient smoothly — see HourlyForecastPage.cpp's identical
+  // fix for the full explanation. One-theme special case rather than a
+  // general contrast heuristic, which would be too fragile to tune without
+  // testing every theme live on hardware.
+  if (activeTheme() == AppTheme::Light) {
+    gfx.fillRoundRect(x, y, w, h, kRadius, blend565(topColour, bottomColour, 0.5f));
+    const uint16_t flatBorder = highlight ? t.accent : t.border;
+    gfx.drawRoundRect(x, y, w, h, kRadius, flatBorder);
+    if (highlight) gfx.drawRoundRect(x + 1, y + 1, w - 2, h - 2, kRadius - 1, flatBorder);
+    return;
+  }
+
   // A plain fillRoundRect base fill can only take one flat colour for the
   // whole shape, but the two rounded-corner zones (top kRadius rows, bottom
   // kRadius rows — a horizontal band can't cover them without its square

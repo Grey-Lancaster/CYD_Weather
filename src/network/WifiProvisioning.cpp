@@ -41,7 +41,7 @@ void dispFlush(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* colorP) {
 
 void touchpadRead(lv_indev_drv_t*, lv_indev_data_t* data) {
   TouchManager::Point p;
-  if (g_touch->rawTouch(p)) {
+  if (g_touch->rawTouchProvisioning(p)) {
     data->state = LV_INDEV_STATE_PR;
     data->point.x = p.x;
     data->point.y = p.y;
@@ -58,6 +58,15 @@ void begin(DisplayManager& display, TouchManager& touch, const char* hostname,
   g_touch = &touch;
   g_onConnected = onConnected;
   g_firedConnected = false;
+
+  // Force the exact orientation TouchWifiProvisioner's own tested-working
+  // example uses (plain rotation 3, no MADCTL mirror bits) rather than
+  // whatever this app's own displayFlipped/mirrorH/mirrorV settings say —
+  // see rawTouchProvisioning()'s header comment. This overrides whatever
+  // DisplayManager::begin() already applied for the main app; startApp()
+  // restores it via DisplayManager::applySettings() once connected.
+  display.tft().setRotation(3);
+  touch.setProvisioningRotation(true);
 
   lv_init();
 

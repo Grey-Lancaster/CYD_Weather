@@ -16,7 +16,10 @@ bool TouchManager::begin(const AppSettings& settings) {
     _ok = false;
     return false;
   }
-  _ts.setRotation(_flipped ? cfg::display::ROTATION_FLIPPED : cfg::display::ROTATION);
+  // Rotation stays fixed here — 180°/mirror handling all happens in
+  // mapRawToScreen() now (see applySettings()), so this only ever needs the
+  // base landscape rotation, never ROTATION_FLIPPED.
+  _ts.setRotation(cfg::display::ROTATION);
   _ok = true;
   LOGI(TAG, "touch ready (cal x=%u..%u y=%u..%u)", (unsigned)_xMin, (unsigned)_xMax,
        (unsigned)_yMin, (unsigned)_yMax);
@@ -41,7 +44,6 @@ void TouchManager::applySettings(const AppSettings& settings) {
   _mirrorH = settings.mirrorH != 0;
   _mirrorV = settings.mirrorV != 0;
   _rotate90 = settings.rotate90 != 0;
-  if (_ok) _ts.setRotation(_flipped ? cfg::display::ROTATION_FLIPPED : cfg::display::ROTATION);
 }
 
 void TouchManager::poll() {
@@ -75,11 +77,28 @@ void TouchManager::poll() {
   _wasTouched = touched;
 }
 
-bool TouchManager::rawTouch(Point& outPoint) {
+void TouchManager::setProvisioningRotation(bool provisioning) {
+  if (!_ok) return;
+  // 3 == TouchWifiProvisioner's CYD_BasicConnect example's ts.setRotation(3)
+  // — see the header comment on rawTouchProvisioning() for why this doesn't
+  // just reuse cfg::display::ROTATION/ROTATION_FLIPPED.
+  _ts.setRotation(provisioning ? 3 : cfg::display::ROTATION);
+}
+
+bool TouchManager::rawTouchProvisioning(Point& outPoint) {
   if (!_ok) return false;
   if (!(_ts.tirqTouched() && _ts.touched())) return false;
   const TS_Point raw = _ts.getPoint();
-  outPoint = mapRawToScreen(raw.x, raw.y);
+  const long maxX = (long)cfg::display::WIDTH - 1;
+  const long maxY = (long)cfg::display::HEIGHT - 1;
+  long x = map(raw.x, _xMin, _xMax, 0, maxX);
+  long y = map(raw.y, _yMin, _yMax, 0, maxY);
+  if (x < 0) x = 0;
+  if (x > maxX) x = maxX;
+  if (y < 0) y = 0;
+  if (y > maxY) y = maxY;
+  outPoint.x = (int16_t)x;
+  outPoint.y = (int16_t)y;
   return true;
 }
 
@@ -96,10 +115,18 @@ TouchManager::Point TouchManager::mapRawToScreen(int16_t rawX, int16_t rawY) con
   if (x > maxX) x = maxX;
   if (y < 0) y = 0;
   if (y > maxY) y = maxY;
-  // Mirroring is applied last, in already-mapped screen space — independent
-  // of calibration and of the swap above.
-  if (_mirrorH) x = maxX - x;
-  if (_mirrorV) y = maxY - y;
+  // Flip/mirror applied last, in already-mapped screen space, following the
+  // same bit algebra as DisplayConfig::buildMadctl() (each axis's MADCTL
+  // mirror bit is set iff displayFlipped XOR the matching mirror setting).
+  // NOTE: only exercised so far via the WiFi picker, which no longer goes
+  // through this path at all (see rawTouchProvisioning() — the picker uses
+  // TouchWifiProvisioner's own proven-working rotation(3)/no-mirror scheme
+  // instead, since this app's calibration values turned out to be calibrated
+  // against that scheme, not this one). This general path is what the main
+  // app's pages use whenever displayFlipped/mirrorH/mirrorV are set via the
+  // web portal — untested in combination, flag if taps drift there too.
+  if (_flipped != _mirrorH) x = maxX - x;
+  if (_flipped != _mirrorV) y = maxY - y;
   Point p;
   p.x = (int16_t)x;
   p.y = (int16_t)y;

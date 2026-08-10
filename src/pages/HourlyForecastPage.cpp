@@ -78,6 +78,24 @@ void drawHourlyCardBackground(TFT_eSPI& gfx, int32_t x, int32_t y, int32_t w, in
   const uint16_t topColour = highlight ? blend565(baseTop, t.accent, 0.25f) : baseTop;
   const uint16_t bottomColour = highlight ? blend565(baseBottom, t.accent, 0.12f) : baseBottom;
 
+  // Light theme's surface/bg/textPrimary sit too close together in RGB565 to
+  // render this gradient smoothly — the same handful of 5/6/5-bit levels
+  // repeated down a ~150px-tall card shows up as visible banding (a dirty,
+  // mottled texture) instead of a smooth fade. Every other theme has enough
+  // spread for the row-by-row blend below to read as continuous, so this is
+  // a one-theme special case rather than a general contrast heuristic, which
+  // would be too fragile to tune without testing every theme live on
+  // hardware. A flat fill has no seam to worry about (unlike the old
+  // flat-corners-vs-gradient-body idea this file used to reject) since the
+  // whole card is one colour.
+  if (activeTheme() == AppTheme::Light) {
+    gfx.fillRoundRect(x, y, w, h, kRadius, blend565(topColour, bottomColour, 0.5f));
+    const uint16_t flatBorder = highlight ? t.accent : t.border;
+    gfx.drawRoundRect(x, y, w, h, kRadius, flatBorder);
+    if (highlight) gfx.drawRoundRect(x + 1, y + 1, w - 2, h - 2, kRadius - 1, flatBorder);
+    return;
+  }
+
   // No fillRoundRect for the fill — a flat base colour there (whichever end
   // of the gradient, or the midpoint between them) always reads as a seam
   // against the true gradient band right next to it, since the two

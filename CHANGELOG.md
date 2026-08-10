@@ -7,6 +7,88 @@ Patch is bumped by 4 on each release, carrying into minor odometer-style
 once patch would reach double digits (e.g. `1.0.9` + one release =
 `1.1.3`, not `1.0.13`).
 
+## [1.4.1] - 2026-08-10
+
+### Fixed
+- Light theme showed a faint mottled/banded texture behind the 5-Day
+  Forecast, Hourly Forecast, and per-day hourly-drilldown cards, confirmed
+  on the physical screen (not a `/mirror` capture artifact — its SPI
+  readback bug is separate and already documented). Root cause: those
+  cards' background is a hand-rolled vertical gradient (TFT_eSPI has no
+  native gradient primitive), blended per-row in RGB565. Light theme's
+  `surface`/`bg`/`textPrimary` sit close enough together that the gradient's
+  top/bottom colours only span a handful of distinct 5/6/5-bit levels over a
+  ~150px-tall card — those few levels repeating down the card is what read
+  as a dirty/mottled texture. Every other (dark-background) theme has enough
+  spread for the same blend to look continuous, so this is a one-theme
+  special case (`activeTheme() == AppTheme::Light` falls back to a flat
+  `fillRoundRect` instead of the banded loop) rather than a general
+  contrast-based heuristic, which isn't reliable to tune without live
+  hardware testing per theme.
+
+## [1.3.7] - 2026-08-10
+
+### Fixed
+- Root-caused the WiFi picker's persistent touch/display mismatch (1.2.5,
+  1.2.9, 1.3.3 all missed it): `TouchWifiProvisioner`'s own tested-working
+  example (`CYD_BasicConnect.ino`) drives this exact board with a plain
+  `tft.setRotation(3)` / `ts.setRotation(3)`, no MADCTL mirror bits at all —
+  and this project's stored touch calibration values are *exactly* that
+  example's (`200..3700` / `240..3800`), meaning they were calibrated
+  against that simple scheme, not against this app's own
+  `displayFlipped`/`mirrorH`/`mirrorV`-driven MADCTL composition. Every
+  attempt so far tried to reconcile the picker with this app's flip/mirror
+  settings math, when the calibration data never matched that math to begin
+  with. `WifiProvisioning::begin()` now forces the proven rotation-3 scheme
+  directly (`TouchManager::setProvisioningRotation()` +
+  `rawTouchProvisioning()`, bypassing `mapRawToScreen()` entirely),
+  independent of whatever this app's own display settings are; `startApp()`
+  restores the app's configured orientation once connected.
+
+## [1.3.3] - 2026-08-10
+
+### Fixed
+- 1.2.9's touch fix still landed taps on the wrong horizontal position with
+  `displayFlipped` + `mirrorH` both on (confirmed live: typing "m" hit "x"
+  and vice versa on the on-device keyboard) — the MADCTL-bit-algebra model
+  it used assumes MX/MY keep their portrait-native meaning (MX=horizontal,
+  MY=vertical), but this panel's MV bit (always set, since the whole project
+  only ever runs landscape) swaps which visual axis each one actually
+  controls. `TouchManager::mapRawToScreen()` now cross-wires the two
+  settings to match what's actually observed on screen: `mirrorV` drives the
+  X-axis touch decision, `mirrorH` drives the Y-axis one.
+
+## [1.2.9] - 2026-08-10
+
+### Fixed
+- Touch position drifted out of sync with the screen whenever both
+  `displayFlipped` and `mirrorH`/`mirrorV` were enabled together (the
+  combination introduced by 1.2.5's new defaults). `TouchManager` used to
+  hand the 180° half of this off to the XPT2046 driver's own
+  `setRotation()`, which inverts the raw ADC reading *before* calibration is
+  applied — while `mirrorH`/`mirrorV` mirrored the already-calibrated screen
+  coordinate *after*. The two only agreed when the touch calibration
+  happened to be symmetric around the ADC's midpoint, which it isn't (see
+  the cal values logged at boot). `mapRawToScreen()` now applies flip and
+  mirror together, in calibrated screen space, using the same bit algebra as
+  the display's own MADCTL composition (`DisplayConfig::buildMadctl()`) —
+  each axis mirrors iff `displayFlipped != mirror{H,V}` — so a tap always
+  lands under the pixel it's touching for any combination of these settings.
+
+## [1.2.5] - 2026-08-10
+
+### Changed
+- Default display orientation is now mirrored horizontally and flipped 180°
+  (`cfg::defaults::MIRROR_H`/`DISPLAY_FLIPPED` in `src/config/AppConfig.h`),
+  to match how this board is physically mounted. Both settings already
+  existed and were live-adjustable via the web portal, but the on-device
+  WiFi setup picker (`WifiProvisioning`) runs before the portal exists to
+  change them, so it always rendered with whatever the *defaults* were —
+  changing the defaults is what actually fixes the picker screen; it also
+  changes the main app's out-of-box orientation to match. Touch mapping
+  (`TouchManager::mapRawToScreen()`) already honoured these same settings,
+  so taps still line up with the mirrored/flipped picker.
+
 ## [1.2.1] - 2026-08-10
 
 ### Fixed
