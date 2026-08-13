@@ -28,6 +28,11 @@ void NetworkManager::applySettings(const AppSettings& settings) {
 }
 
 void NetworkManager::onConnected() {
+  if (_disconnectedAtMs != 0) {
+    LOGI(TAG, "reconnected after %lu ms (outage #%lu)", (unsigned long)(millis() - _disconnectedAtMs),
+         (unsigned long)_disconnectCount);
+    _disconnectedAtMs = 0;
+  }
   LOGI(TAG, "connected, ip=%s rssi=%d hostname=%s", WiFi.localIP().toString().c_str(),
        (int)WiFi.RSSI(), _hostname);
   if (!_mdnsStarted) {
@@ -52,7 +57,11 @@ void NetworkManager::tick() {
 void NetworkManager::setState(NetState next) {
   if (next == _state) return;
   _state = next;
-  LOGD(TAG, "state -> %s", stateName());
+  LOGI(TAG, "state -> %s", stateName());
+  if (next == NetState::Disconnected) {
+    _disconnectedAtMs = millis();
+    _disconnectCount++;
+  }
   if (_onStateChange) _onStateChange(next);
 }
 

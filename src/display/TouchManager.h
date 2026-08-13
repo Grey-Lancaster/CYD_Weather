@@ -43,6 +43,15 @@ class TouchManager {
   void onActivity(ActivityCallback cb) { _onActivity = cb; }
   bool isTouched() const { return _wasTouched; }
 
+  // Diagnostic-only (added to help root-cause a rare, hard-to-reproduce bug
+  // where the XPT2046 stops reporting touches after a WiFi outage — see
+  // main.cpp's "diag.heartbeat" task). Counts presses seen by poll() since
+  // boot; 0 presses over a long uptime, cross-referenced against
+  // NetworkManager's outage log, is the signal that'd confirm or rule out
+  // the WiFi-outage correlation next time this happens.
+  uint32_t pressCount() const { return _pressCount; }
+  bool touchOk() const { return _ok; }
+
   // For LVGL's touch-indev read callback (see network/WifiProvisioning.cpp)
   // during the pre-connect provisioning phase, before the "touch.poll"
   // scheduler task (which drives poll() instead) exists — so there's no
@@ -78,6 +87,7 @@ class TouchManager {
   Point _pressPoint;
   Point _lastPoint;  // most recent point while touched, tracked for swipe distance
   uint32_t _pressMs = 0;
+  uint32_t _pressCount = 0;  // diagnostic-only, see pressCount()
   bool _wasTouched = false;
   bool _gestureConsumed = false;
   bool _ok = false;

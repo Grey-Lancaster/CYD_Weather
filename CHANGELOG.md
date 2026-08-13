@@ -7,6 +7,26 @@ Patch is bumped by 4 on each release, carrying into minor odometer-style
 once patch would reach double digits (e.g. `1.0.9` + one release =
 `1.1.3`, not `1.0.13`).
 
+## [1.4.5] - 2026-08-10
+
+### Added
+- Diagnostic logging for a rare, hard-to-reproduce bug: touch stops
+  responding (dim, unresponsive to taps, "half not working") after a WiFi
+  outage-and-recovery cycle, but the main scheduler/loop stays completely
+  healthy throughout — confirmed live on hardware that only a reset (not
+  necessarily a full power cycle) recovers it, and heap/uptime/page rotation
+  never falter while it's broken. `NetworkManager` now logs outage duration
+  and reconnect count at Info level (was Debug-only); the existing
+  `sys.stats` heartbeat (every 60s) now also logs touch's live press count
+  and `_ok` state alongside WiFi state, so next occurrence can be
+  cross-referenced against the WiFi outage timeline without needing Debug
+  logging enabled in advance. No behaviour change — logging only. Working
+  theory (unconfirmed — needs a scope/multimeter on the 3.3V rail during a
+  live reconnect storm to verify): the WiFi radio's more aggressive
+  reconnect-attempt current draw during an outage sags the shared 3.3V rail
+  enough to glitch the touch controller's analog front-end, without dipping
+  low enough to trip the ESP32's own brownout detector.
+
 ## [1.4.1] - 2026-08-10
 
 ### Fixed

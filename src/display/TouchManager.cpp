@@ -55,6 +55,7 @@ void TouchManager::poll() {
     if (!_wasTouched) {
       _pressPoint = p;
       _pressMs = millis();
+      _pressCount++;
       _gestureConsumed = _onActivity ? _onActivity() : false;
       LOGD(TAG, "press at %d,%d (raw %d,%d)", (int)p.x, (int)p.y, (int)raw.x, (int)raw.y);
     }

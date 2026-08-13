@@ -42,4 +42,10 @@ class NetworkManager {
   NetState _state = NetState::Disconnected;
   bool _mdnsStarted = false;
   StateCallback _onStateChange;
+  // Diagnostic-only (added to help root-cause a rare, hard-to-reproduce bug
+  // where touch stops responding after a WiFi outage — see TouchManager's
+  // pressCount()/msSinceLastPress() and main.cpp's "diag.heartbeat" task).
+  // Not used for any behavioural decision, just logged.
+  uint32_t _disconnectedAtMs = 0;
+  uint32_t _disconnectCount = 0;
 };

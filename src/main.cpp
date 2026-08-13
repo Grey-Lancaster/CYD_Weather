@@ -259,6 +259,14 @@ static void startApp(const String& ip) {
     if (heapFree < cfg::sys::LOW_HEAP_WARN_BYTES) {
       LOGW("SYS", "low heap: %lu bytes free", (unsigned long)heapFree);
     }
+    // Diagnostic-only, added to help root-cause a rare bug where touch stops
+    // responding after a WiFi outage (NetworkManager logs the outage/
+    // reconnect side of this) — cross-reference this line's pressCount
+    // against that log next time it happens. A press count that stops
+    // incrementing right after a "reconnected after N ms" line, despite the
+    // device visibly being tapped, would confirm the correlation.
+    LOGI("SYS", "touch ok=%d presses=%lu | net=%s", (int)touchManager.touchOk(),
+         (unsigned long)touchManager.pressCount(), networkManager.stateName());
   });
 
   // Paint the dashboard now rather than waiting for the first scheduler
