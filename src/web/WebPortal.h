@@ -19,6 +19,8 @@
 //   GET  /api/settings         current settings (wifi password masked)
 //   POST /api/settings         partial update, JSON body -> deferred apply
 //   POST /api/restart          deferred restart (response flushes first)
+//   POST /api/recal            3.5" board only: forget the touch calibration and
+//                              restart (the next boot asks for the four corners)
 //   GET  /api/settings/backup  full settings as a downloadable JSON file
 //                              (unmasked secrets — see storage/SettingsBackup)
 //   POST /api/settings/restore JSON body from a previous backup -> apply,
@@ -50,6 +52,7 @@
 class WebPortal {
  public:
   using SettingsChangedCallback = std::function<void()>;
+  using RecalibrateCallback = std::function<void()>;
 
   WebPortal(SettingsManager& settings, NetworkManager& network, WeatherService& weather,
             SdCardManager& sdCard, DisplayManager& display);
@@ -57,6 +60,9 @@ class WebPortal {
   bool begin();
   void handle();  // web.handle task: serve clients + execute deferred restarts
   void onSettingsChanged(SettingsChangedCallback cb) { _onSettingsChanged = cb; }
+  // Boards that need a touch calibration (3.5"): enables POST /api/recal, which
+  // runs this (forget the calibration) and restarts so the next boot asks again.
+  void onRecalibrate(RecalibrateCallback cb) { _onRecalibrate = cb; }
 
  private:
   void handleRoot();
@@ -64,6 +70,7 @@ class WebPortal {
   void handleGetSettings();
   void handlePostSettings();
   void handleRestart();
+  void handleRecalibrate();
   void handleSettingsBackup();
   void handleSettingsRestore();
   void handleSdCardStatus();
@@ -83,6 +90,7 @@ class WebPortal {
   DisplayManager& _display;
   WebServer _http;
   SettingsChangedCallback _onSettingsChanged;
+  RecalibrateCallback _onRecalibrate;
   uint32_t _restartAtMs = 0;
   uint32_t _applyAtMs = 0;
 };

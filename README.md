@@ -69,9 +69,29 @@ is damaged, just flash another one.
 | `cyd` | ILI9341, normal colours | The standard CYD and many "2 USB" boards. **Try this first.** |
 | `cyd2usb` | ST7789 | "2 USB" boards with an ST7789 display |
 | `cyd2b` | ILI9341, inverted colours | "2B" variant |
+| `cyd35` | ST7796 480×320 | 3.5" CYD (ESP32-32E, see [3.5" CYD](#35-cyd)) |
 
 Orientation, colour order, mirroring and inversion are settings in the web
 portal (no reflash), so small differences between boards can be corrected there.
+
+## 3.5" CYD
+
+The `cyd35` build is for the 3.5-inch CYD (ESP32-32E / ESP32-3248S035: ST7796
+480×320, resistive touch). It differs from the 2.8" boards in three ways:
+
+- The backlight is on GPIO27.
+- The touch controller shares the display's SPI pins, so touch is read through
+  TFT_eSPI (a separate touch driver would take over the display's pins and
+  freeze the screen).
+- The dashboard is laid out for 320×240, so it is shown **centered** on the
+  larger screen with a black border. A full-size 480×320 layout is future work.
+
+The first time it starts, the device asks you to touch four corners to calibrate
+the touch screen; this is saved. The web portal's System card has a
+**Recalibrate touch** button, and a factory reset (hold BOOT for 10 s) clears it.
+
+**This build has not been tested on hardware by the maintainer** (no board);
+it was written from a user's pin list. Reports are welcome in the issues.
 
 ## Installing
 

@@ -173,6 +173,7 @@ dt{color:#96aabe}dd{margin:0}
 </select>
 <button type="submit">Save</button>
 <button type="button" onclick="armConfirm(this,restartNow)">Restart</button>
+<button type="button" id="recalBtn" style="display:none" onclick="armConfirm(this,recalNow)">Recalibrate touch</button>
 <div id="msg"></div>
 </div>
 </form>
@@ -207,6 +208,7 @@ el('st-ip').textContent=s.wifi.ip||'-';
 el('st-rssi').textContent=s.wifi.rssi?s.wifi.rssi+' dBm':'-';
 el('st-up').textContent=s.uptime;
 el('st-rs').textContent=s.lastRestart||'-';
+el('recalBtn').style.display=s.recalSupported?'':'none';
 el('st-heap').textContent=(s.heapFree/1024).toFixed(1)+' KB';
 el('st-wxsrc').textContent=s.weather.provider;
 el('st-wxupd').textContent=s.weather.valid?s.weather.lastUpdate+(s.weather.failed?' (last fetch failed, retrying)':''):(s.weather.failed?'Fetch failed':'Fetching…');
@@ -248,6 +250,7 @@ if(btn.dataset.armed){clearTimeout(+btn.dataset.timer);btn.textContent=btn.datas
 btn.dataset.label=btn.textContent;btn.dataset.armed='1';btn.textContent='Tap again to confirm';
 btn.dataset.timer=setTimeout(()=>{btn.textContent=btn.dataset.label;delete btn.dataset.armed},3000);
 }
+async function recalNow(){try{await fetch('/api/recal',{method:'POST'})}catch(e){}flashMsg('Restarting - touch the corners shown on the screen',0)}
 async function restartNow(){try{await fetch('/api/restart',{method:'POST'})}catch(e){}flashMsg('Restarting…',0)}
 el('restoreFile').addEventListener('change',async ev=>{
 const file=ev.target.files[0];ev.target.value='';if(!file)return;

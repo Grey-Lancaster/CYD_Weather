@@ -21,7 +21,11 @@ constexpr uint8_t DEFAULT_LEVEL = 3;  // 0=None 1=Error 2=Warn 3=Info 4=Debug
 
 namespace pins {
 // TFT data/control pins are configured via TFT_eSPI build flags (platformio.ini).
+#if defined(BOARD_CYD35)
+constexpr int8_t TFT_BACKLIGHT = 27;  // 3.5" board
+#else
 constexpr int8_t TFT_BACKLIGHT = 21;
+#endif
 constexpr int8_t TOUCH_CLK = 25;
 constexpr int8_t TOUCH_MISO = 39;
 constexpr int8_t TOUCH_MOSI = 32;
@@ -44,8 +48,21 @@ constexpr int8_t SD_MOSI = 23;
 }
 
 namespace display {
+// The UI's logical size: every page is laid out for this 320x240 landscape frame.
 constexpr uint16_t WIDTH = 320;
 constexpr uint16_t HEIGHT = 240;
+// The physical panel in landscape. Bigger than the UI on the 3.5" board, where the
+// UI is shown centered (DisplayManager sets a TFT_eSPI viewport at ORIGIN_X/Y and
+// TouchManager subtracts the same offset).
+#if defined(BOARD_CYD35)
+constexpr uint16_t PANEL_W = 480;
+constexpr uint16_t PANEL_H = 320;
+#else
+constexpr uint16_t PANEL_W = 320;
+constexpr uint16_t PANEL_H = 240;
+#endif
+constexpr int16_t ORIGIN_X = (int16_t)((PANEL_W - WIDTH) / 2);
+constexpr int16_t ORIGIN_Y = (int16_t)((PANEL_H - HEIGHT) / 2);
 // This UI's layout (ui/Widgets.h) is fixed for a 320x240 landscape frame, so
 // only the two landscape TFT_eSPI rotations are supported — portrait (0/2)
 // is not a page-manager orientation and there is no code path for it.
@@ -269,7 +286,7 @@ constexpr uint8_t COLOR_ORDER = 1;       // ColorOrder::BGR
 // BOARD_ILI9341 or BOARD_ST7789). The ST7789 panel comes out horizontally
 // mirrored with the flip above; the ILI9341 does not. Inversion follows the
 // env's TFT_INVERSION_ON flag. All of these stay adjustable in the web portal.
-#if defined(BOARD_ILI9341)
+#if defined(BOARD_ILI9341) || defined(BOARD_CYD35)
 constexpr bool MIRROR_H = false;
 #else
 constexpr bool MIRROR_H = true;

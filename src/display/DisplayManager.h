@@ -21,6 +21,13 @@ class DisplayManager {
   void applySettings(const AppSettings& settings);
 
   TFT_eSPI& tft() { return _tft; }
+  // Boards whose panel is larger than the 320x240 UI (cfg::display::ORIGIN_X/Y):
+  // the UI is drawn through a TFT_eSPI viewport centered on the panel. No-ops on
+  // 320x240 panels. Call applyViewport() after anything that calls setRotation()
+  // (which resets the viewport) and resetViewport() before drawing in absolute
+  // panel coordinates (touch calibration, the WiFi picker's raw flush).
+  void applyViewport();
+  void resetViewport();
   TFT_eSprite* acquireCanvas(uint16_t w, uint16_t h);
   void pushCanvas(int32_t x, int32_t y);
 

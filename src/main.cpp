@@ -171,6 +171,9 @@ static void startApp(const String& ip) {
   });
   networkManager.begin(settings);
 
+#if defined(BOARD_CYD35)
+  webPortal.onRecalibrate([]() { touchManager.clearCalibration(); });
+#endif
   webPortal.begin();
 
   scheduler.add("web.handle", cfg::sched::WEB_HANDLE_MS, []() { webPortal.handle(); });
@@ -200,6 +203,7 @@ static void startApp(const String& ip) {
            (unsigned long)cfg::sys::FACTORY_RESET_HOLD_MS);
       SettingsManager::instance().factoryReset();
       WifiProvisioning::reset();
+      touchManager.clearCalibration();
       Serial.flush();
       ESP.restart();
     }
@@ -292,7 +296,16 @@ void setup() {
   setActiveTheme(settings.theme);
 
   displayManager.begin(settings);
+  touchManager.attachDisplay(displayManager.tft());
   touchManager.begin(settings);
+  // 3.5" board only: the touch screen needs a one-time four-corner calibration
+  // before anything can be tapped (including the WiFi picker). Drawn in absolute
+  // panel coordinates, outside the UI viewport.
+  if (touchManager.needsCalibration()) {
+    displayManager.resetViewport();
+    touchManager.runCalibration();
+    displayManager.applyViewport();
+  }
   // SD card and touch share a physical SPI peripheral on different pin
   // mappings (see storage/SdCardManager's class comment) — hand the bus back
   // to touch immediately after any SD access.

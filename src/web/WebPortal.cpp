@@ -32,6 +32,7 @@ bool WebPortal::begin() {
   _http.on("/api/settings", HTTP_GET, [this]() { handleGetSettings(); });
   _http.on("/api/settings", HTTP_POST, [this]() { handlePostSettings(); });
   _http.on("/api/restart", HTTP_POST, [this]() { handleRestart(); });
+  _http.on("/api/recal", HTTP_POST, [this]() { handleRecalibrate(); });
   _http.on("/api/settings/backup", HTTP_GET, [this]() { handleSettingsBackup(); });
   _http.on("/api/settings/restore", HTTP_POST, [this]() { handleSettingsRestore(); });
   _http.on("/api/sdcard/status", HTTP_GET, [this]() { handleSdCardStatus(); });
@@ -209,6 +210,7 @@ void WebPortal::handleStatus() {
   fmt::uptime(up, sizeof(up), millis());
   doc["uptime"] = up;
   doc["lastRestart"] = resetReasonText();
+  doc["recalSupported"] = (bool)_onRecalibrate;
   doc["heapFree"] = ESP.getFreeHeap();
   doc["heapMin"] = ESP.getMinFreeHeap();
   JsonObject wifi = doc["wifi"].to<JsonObject>();
@@ -402,6 +404,16 @@ void WebPortal::handlePostSettings() {
 }
 
 void WebPortal::handleRestart() {
+  sendOk();
+  scheduleRestart();
+}
+
+void WebPortal::handleRecalibrate() {
+  if (!_onRecalibrate) {
+    _http.send(404, "application/json", "{\"error\":\"not supported on this board\"}");
+    return;
+  }
+  _onRecalibrate();
   sendOk();
   scheduleRestart();
 }

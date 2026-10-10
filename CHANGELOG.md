@@ -23,6 +23,12 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 - GitHub Actions builds every board on each push and, for a tag, publishes a
   release with the flashable images (`CYD-Weather-<env>-factory.bin`).
 
+- **3.5" CYD support** (`cyd35` env, ST7796 480×320, ESP32-32E pinout): backlight
+  on GPIO27, touch read through TFT_eSPI on the TFT's shared SPI bus with an
+  on-device four-corner calibration (web portal: *Recalibrate touch*), and the
+  existing 320×240 UI shown centered on the larger panel via a TFT_eSPI
+  viewport. Written from a user's pin list; not yet tested on hardware.
+
 ### Changed
 - All dependencies and the PlatformIO platform are pinned to the versions
   this project is built and tested with (previously `lvgl@^8.3.11` had drifted

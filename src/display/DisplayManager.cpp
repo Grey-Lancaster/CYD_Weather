@@ -13,6 +13,7 @@ bool DisplayManager::begin(const AppSettings& settings) {
   // configuration — avoids a visible flicker from re-applying MADCTL after
   // content is already on screen.
   DisplayConfig::apply(_tft, settings);
+  applyViewport();
   _tft.fillScreen(TFT_BLACK);
   _canvas.setColorDepth(16);
 
@@ -27,8 +28,26 @@ bool DisplayManager::begin(const AppSettings& settings) {
   return true;
 }
 
+void DisplayManager::resetViewport() {
+#if defined(BOARD_CYD35)
+  _tft.resetViewport();
+#endif
+}
+
+void DisplayManager::applyViewport() {
+#if defined(BOARD_CYD35)
+  // Clear the whole panel first (the border around the UI stays black), then
+  // confine all further drawing to the centered UI rectangle.
+  _tft.resetViewport();
+  _tft.fillScreen(TFT_BLACK);
+  _tft.setViewport(cfg::display::ORIGIN_X, cfg::display::ORIGIN_Y, cfg::display::WIDTH,
+                   cfg::display::HEIGHT, true);
+#endif
+}
+
 void DisplayManager::applySettings(const AppSettings& settings) {
   DisplayConfig::apply(_tft, settings);
+  applyViewport();  // setRotation() inside apply() reset it
   _dimBrightness = settings.dimBrightness;
   _dimTimeoutS = settings.dimTimeoutS;
   setBrightness(settings.brightness);

@@ -33,7 +33,9 @@ void dispFlush(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* colorP) {
   const uint32_t w = area->x2 - area->x1 + 1;
   const uint32_t h = area->y2 - area->y1 + 1;
   tft.startWrite();
-  tft.setAddrWindow(area->x1, area->y1, w, h);
+  // Absolute panel coordinates: the UI sits at ORIGIN_X/Y on panels larger than
+  // 320x240 (0,0 on the 2.8" boards).
+  tft.setAddrWindow(area->x1 + cfg::display::ORIGIN_X, area->y1 + cfg::display::ORIGIN_Y, w, h);
   tft.pushColors((uint16_t*)&colorP->full, w * h, true);
   tft.endWrite();
   lv_disp_flush_ready(disp);
@@ -66,6 +68,12 @@ void begin(DisplayManager& display, TouchManager& touch, const char* hostname,
   // DisplayManager::begin() already applied for the main app; startApp()
   // restores it via DisplayManager::applySettings() once connected.
   display.tft().setRotation(3);
+#if defined(BOARD_CYD35)
+  // setRotation() reset the viewport; the picker flushes in absolute panel
+  // coordinates (see dispFlush), so leave it off and clear the border.
+  display.resetViewport();
+  display.tft().fillScreen(TFT_BLACK);
+#endif
   touch.setProvisioningRotation(true);
 
   lv_init();
