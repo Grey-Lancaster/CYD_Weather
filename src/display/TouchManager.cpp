@@ -4,8 +4,15 @@
 
 static const char* TAG = "TOUCH";
 
+// The XPT2046's interrupt pin (cfg::pins::TOUCH_IRQ, GPIO36) is deliberately NOT
+// handed to XPT2046_Touchscreen. With it, the library only reads the chip after
+// a falling edge on that pin and never recovers if one edge is missed (noise on
+// GPIO36 during heavy WiFi activity is a plausible cause of the "touch stops
+// responding after a WiFi outage" report). Without it, the library samples the
+// controller on every poll(): a few bytes over SPI every 20 ms, and nothing that
+// can get stuck.
 TouchManager::TouchManager()
-    : _spi(VSPI), _ts(cfg::pins::TOUCH_CS_PIN, cfg::pins::TOUCH_IRQ) {}
+    : _spi(VSPI), _ts(cfg::pins::TOUCH_CS_PIN) {}  // no IRQ pin on purpose, see below
 
 bool TouchManager::begin(const AppSettings& settings) {
   applySettings(settings);

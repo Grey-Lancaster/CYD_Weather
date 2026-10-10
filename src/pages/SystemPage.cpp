@@ -4,9 +4,10 @@
 #include "storage/WeatherHistoryManager.h"
 #include "ui/Widgets.h"
 #include "utils/Format.h"
+#include "utils/ResetReason.h"
 
 namespace {
-constexpr uint8_t kRows = 9;
+constexpr uint8_t kRows = 10;
 constexpr int32_t kRowH = ui::layout::BODY_H / kRows;
 constexpr int32_t kLabelX = ui::layout::CARD_MARGIN_X + 10;
 constexpr int32_t kValueX = ui::layout::CARD_MARGIN_X + ui::layout::CARD_W - 10;
@@ -18,7 +19,8 @@ constexpr int32_t kValueColW =
     ui::layout::CARD_MARGIN_X + ui::layout::CARD_W - kValueColX - 4;
 constexpr const char* kLabels[kRows] = {"Firmware",     "IP Address",     "WiFi Signal",
                                         "Free Heap",    "Uptime",         "Storage Total",
-                                        "Storage Used", "Readings Stored", "Last Logged"};
+                                        "Storage Used", "Readings Stored", "Last Logged",
+                                        "Last Restart"};
 
 int32_t rowMidY(uint8_t i) {
   return ui::layout::BODY_Y + (int32_t)i * kRowH + kRowH / 2;
@@ -91,7 +93,8 @@ void SystemPage::render(bool full) {
   strlcpy(lastLogged, loggedClock != nullptr ? loggedClock + 1 : "-", sizeof(lastLogged));
 
   const char* values[kRows] = {"v" FW_VERSION, ip,          signal,       heap,       up,
-                               storageTotal,   storageUsed, readingCount, lastLogged};
+                               storageTotal,   storageUsed, readingCount, lastLogged,
+                               resetReasonText()};
   tft.setTextFont(t.fontSmall);
   tft.setTextDatum(MR_DATUM);
   tft.setTextColor(t.textPrimary, t.surface);

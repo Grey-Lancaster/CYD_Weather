@@ -1,0 +1,100 @@
+name: Build
+
+# Every push builds all board variants (artifacts are kept for download).
+# A tag push (e.g. 1.4.9 or v2.0.0) also publishes a GitHub Release whose
+# notes come from that version's CHANGELOG.md section and whose files are the
+# flashable images below.
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["*"]
+  pull_request:
+
+permissions:
+  contents: write   # tag pushes create a GitHub Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [cyd, cyd2usb, cyd2b]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-${{ hashFiles('platformio.ini') }}
+      - run: pip install platformio esptool==4.8.1
+
+      - name: Build firmware
+        run: pio run -e ${{ matrix.env }}
+
+      - name: Make the flashable image
+        run: |
+          B=.pio/build/${{ matrix.env }}
+          mkdir -p dist
+          # One file for the whole flash, written at offset 0 (web installer or
+          # esptool). Offsets follow partitions.csv. It also overwrites the
+          # settings area, so a fresh install starts with default settings and
+          # asks for WiFi again.
+          esptool.py --chip esp32 merge_bin \
+            -o dist/CYD-Weather-${{ matrix.env }}-factory.bin \
+            --flash_mode dio --flash_freq 40m --flash_size 4MB \
+            0x1000 $B/bootloader.bin 0x8000 $B/partitions.bin 0x10000 $B/firmware.bin
+          cp $B/firmware.bin dist/CYD-Weather-${{ matrix.env }}-firmware.bin
+          ls -l dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.env }}
+          path: dist/*
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract this version's changelog section
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" { found=1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > release_notes.md
+          if [ ! -s release_notes.md ]; then echo "See CHANGELOG.md for the changes in this release." > release_notes.md; fi
+          {
+            echo "## Which file do I need?"
+            echo
+            echo "The panel in your board decides the build (the ILI9341 and ST7789 are different chips):"
+            echo
+            echo "| Build | Panel | Boards |"
+            echo "| --- | --- | --- |"
+            echo '| `cyd` | ILI9341, normal colours | The standard CYD and many "2 USB" boards. **Try this first.** |'
+            echo '| `cyd2usb` | ST7789 | "2 USB" boards with an ST7789 display |'
+            echo '| `cyd2b` | ILI9341, inverted colours | "2B" variant |'
+            echo
+            echo 'Wrong build = white screen or odd colours; nothing is damaged, just flash another. Flash `*-factory.bin` at offset 0 (it also resets settings and WiFi), e.g. `esptool.py --chip esp32 write_flash 0x0 CYD-Weather-cyd-factory.bin`.'
+            echo
+            cat release_notes.md
+          } > release_body.md
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release_body.md
+          files: dist/*
+          prerelease: ${{ contains(github.ref_name, '-') }}

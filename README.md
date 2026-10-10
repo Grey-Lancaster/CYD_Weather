@@ -13,11 +13,12 @@ built-in web portal for setup — no companion app or cloud account required.
 
 ![CYD Weather running on the device](CYD-Weather-photo.jpg)
 
-**[Flash it in your browser with the Web Flasher](https://henryscat.github.io/)**
+**Install:** download the `*-factory.bin` for your board from the [latest release](https://github.com/Grey-Lancaster/CYD_Weather/releases/latest) and flash it at offset 0 (see [Installing](#installing)).
+(The web flasher at henryscat.github.io installs the *upstream* project's firmware, not this fork's.)
 
-<sub>Hardware: ESP32-WROOM-32, 2.8" ILI9341 320x240 TFT, XPT2046 resistive
-touch. Software: Arduino framework + TFT_eSPI (no LVGL), modular C++, fully
-non-blocking main loop.</sub>
+<sub>Hardware: ESP32-WROOM-32, 2.8" 320x240 TFT (ILI9341 or ST7789, see
+[Which build?](#which-build)), XPT2046 resistive touch. Software: Arduino
+framework + TFT_eSPI (no LVGL), modular C++, fully non-blocking main loop.</sub>
 
 ## Dashboard pages
 
@@ -56,16 +57,51 @@ Selectable from the web portal, no rebuild required — 20 options in total:
 - **Met Office Weather DataHub** ("Global Spot") — requires an API key.
 - **Pirate Weather** — Dark Sky-compatible, requires an API key.
 
+## Which build?
+
+The display panel in your board decides the build, not the number of USB
+ports (the ILI9341 and ST7789 are different chips, and TFT_eSPI needs to know
+which one at compile time). Wrong build = white screen or odd colours; nothing
+is damaged, just flash another one.
+
+| Build | Panel | Boards |
+|---|---|---|
+| `cyd` | ILI9341, normal colours | The standard CYD and many "2 USB" boards. **Try this first.** |
+| `cyd2usb` | ST7789 | "2 USB" boards with an ST7789 display |
+| `cyd2b` | ILI9341, inverted colours | "2B" variant |
+
+Orientation, colour order, mirroring and inversion are settings in the web
+portal (no reflash), so small differences between boards can be corrected there.
+
+## Installing
+
+Download `CYD-Weather-<build>-factory.bin` from the
+[latest release](https://github.com/Grey-Lancaster/CYD_Weather/releases/latest)
+and write it at **offset 0**, either with the browser tool
+<https://espressif.github.io/esptool-js/> (Chrome or Edge) or with esptool:
+
+```
+esptool.py --chip esp32 write_flash 0x0 CYD-Weather-cyd-factory.bin
+```
+
+A factory image replaces everything on the board, including saved settings and
+WiFi credentials; it starts with defaults and shows the on-device WiFi picker.
+
 ## Building
 
 Requires [PlatformIO](https://platformio.org/). TFT_eSPI is configured entirely
 from build flags in [platformio.ini](platformio.ini) — no library edits needed.
+The platform and every library are pinned, so a build today matches a build next
+year. Pick the env for your board:
 
 ```
-pio run                 # build
-pio run -t upload       # flash
-pio device monitor      # 115200 baud, exception decoder enabled
+pio run -e cyd2usb                 # build  (cyd, cyd2usb or cyd2b)
+pio run -e cyd2usb -t upload       # flash
+pio device monitor                 # 115200 baud, exception decoder enabled
 ```
+
+GitHub Actions builds every board on each push and attaches the flashable
+images to each release.
 
 There is no OTA update mechanism — the board's default dual-app A/B
 partition table has been replaced with a single-app layout

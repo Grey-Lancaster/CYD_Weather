@@ -7,6 +7,7 @@
 #include "storage/SettingsBackup.h"
 #include "utils/Format.h"
 #include "utils/Log.h"
+#include "utils/ResetReason.h"
 #include "weather/WeatherUnits.h"
 #include "web/WebAssets.h"
 
@@ -207,6 +208,7 @@ void WebPortal::handleStatus() {
   char up[24];
   fmt::uptime(up, sizeof(up), millis());
   doc["uptime"] = up;
+  doc["lastRestart"] = resetReasonText();
   doc["heapFree"] = ESP.getFreeHeap();
   doc["heapMin"] = ESP.getMinFreeHeap();
   JsonObject wifi = doc["wifi"].to<JsonObject>();

@@ -129,6 +129,9 @@ constexpr uint32_t PAGE_TRANSITION_MS = 180;
 
 namespace sys {
 constexpr uint32_t LOW_HEAP_WARN_BYTES = 40u * 1024u;
+// Main-loop watchdog. Generous: the WiFi picker/connect path can legitimately
+// spend a while inside one loop() pass; a real hang is far longer than this.
+constexpr uint32_t WATCHDOG_S = 60;
 // How long the physical BOOT button must be held to trigger a factory reset
 // (see main.cpp's "boot.button" scheduler task). Long enough that a normal
 // short press (jump to System Info) or an accidental bump can't reach it.
@@ -262,9 +265,21 @@ constexpr uint16_t DIM_TIMEOUT_S = 120;
 // flag, so no reflash is needed either way.
 constexpr bool DISPLAY_FLIPPED = true;   // true = display::ROTATION_FLIPPED (USB-left, 180°)
 constexpr uint8_t COLOR_ORDER = 1;       // ColorOrder::BGR
+// Board-specific first-boot orientation (the env in platformio.ini defines
+// BOARD_ILI9341 or BOARD_ST7789). The ST7789 panel comes out horizontally
+// mirrored with the flip above; the ILI9341 does not. Inversion follows the
+// env's TFT_INVERSION_ON flag. All of these stay adjustable in the web portal.
+#if defined(BOARD_ILI9341)
+constexpr bool MIRROR_H = false;
+#else
 constexpr bool MIRROR_H = true;
+#endif
 constexpr bool MIRROR_V = false;
+#if defined(TFT_INVERSION_ON)
+constexpr bool INVERT_COLORS = true;
+#else
 constexpr bool INVERT_COLORS = false;
+#endif
 constexpr bool ROTATE_90 = false;       // MADCTL row/col swap, on top of the flip above
 constexpr bool SWAP_NAVIGATION = false;  // false = swipe-left advances (PageManager::next())
 constexpr bool HOUR12 = false;  // false = 24-hour clock (existing behaviour, kept as the default)

@@ -46,6 +46,7 @@ dt{color:#96aabe}dd{margin:0}
 <dt>IP</dt><dd id="st-ip">&ndash;</dd>
 <dt>Signal</dt><dd id="st-rssi">&ndash;</dd>
 <dt>Uptime</dt><dd id="st-up">&ndash;</dd>
+<dt>Last restart</dt><dd id="st-rs">&ndash;</dd>
 <dt>Free heap</dt><dd id="st-heap">&ndash;</dd>
 <dt>Weather source</dt><dd id="st-wxsrc">&ndash;</dd>
 <dt>Weather updated</dt><dd id="st-wxupd">&ndash;</dd>
@@ -205,6 +206,7 @@ el('st-wifi').textContent=s.wifi.state+(s.wifi.ssid?' ('+s.wifi.ssid+')':'');
 el('st-ip').textContent=s.wifi.ip||'-';
 el('st-rssi').textContent=s.wifi.rssi?s.wifi.rssi+' dBm':'-';
 el('st-up').textContent=s.uptime;
+el('st-rs').textContent=s.lastRestart||'-';
 el('st-heap').textContent=(s.heapFree/1024).toFixed(1)+' KB';
 el('st-wxsrc').textContent=s.weather.provider;
 el('st-wxupd').textContent=s.weather.valid?s.weather.lastUpdate+(s.weather.failed?' (last fetch failed, retrying)':''):(s.weather.failed?'Fetch failed':'Fetching…');

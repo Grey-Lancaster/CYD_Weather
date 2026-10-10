@@ -9,6 +9,7 @@
 // the app itself draws directly via TFT_eSPI instead of LVGL.
 // ============================================================================
 #include <Arduino.h>
+#include <esp_task_wdt.h>
 
 #include "config/AppConfig.h"
 #include "config/Version.h"
@@ -34,6 +35,7 @@
 #include "ui/Theme.h"
 #include "utils/Format.h"
 #include "utils/Log.h"
+#include "utils/ResetReason.h"
 #include "utils/TaskScheduler.h"
 #include "web/WebPortal.h"
 #include "weather/WeatherAlertManager.h"
@@ -281,6 +283,7 @@ static void startApp(const String& ip) {
 void setup() {
   Log::begin(cfg::serial::BAUD);
   LOGI(TAG, "%s v%s (built %s)", FW_NAME, FW_VERSION, FW_BUILD_DATE);
+  LOGI(TAG, "last restart: %s", resetReasonText());
 
   SettingsManager& settingsManager = SettingsManager::instance();
   settingsManager.loadSettings();
@@ -300,9 +303,17 @@ void setup() {
   // network/WifiProvisioning.h and this file's own top comment. startApp()
   // runs everything else once that happens.
   WifiProvisioning::begin(displayManager, touchManager, settings.hostname, startApp);
+
+  // Watchdog: if loop() ever stops running for cfg::sys::WATCHDOG_S, restart
+  // instead of freezing. loop() runs in both phases (picker and dashboard),
+  // so it is fed on every pass below; the weather fetch has its own task and
+  // is not watched.
+  esp_task_wdt_init(cfg::sys::WATCHDOG_S, true);
+  esp_task_wdt_add(nullptr);
 }
 
 void loop() {
+  esp_task_wdt_reset();
   if (!appStarted) {
     WifiProvisioning::loop();
   } else {

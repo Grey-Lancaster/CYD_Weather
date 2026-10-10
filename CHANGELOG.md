@@ -7,6 +7,38 @@ Patch is bumped by 4 on each release, carrying into minor odometer-style
 once patch would reach double digits (e.g. `1.0.9` + one release =
 `1.1.3`, not `1.0.13`).
 
+## [Unreleased]
+
+### Added
+- **Watchdog:** if the main loop ever stops running for 60 seconds, the
+  device restarts instead of freezing.
+- **Last restart reason** (power on, reset button, software restart, crash,
+  watchdog, brownout) on the System Information page, in `/api/status`
+  (`lastRestart`) and the web portal's Status card, and in the boot log — so
+  crashes can be spotted without a serial cable.
+- **Board variants:** `platformio.ini` now has one environment per panel type —
+  `cyd` (ILI9341), `cyd2usb` (ST7789, the previous and default build) and
+  `cyd2b` (ILI9341, inverted colours) — with matching first-boot orientation
+  and inversion defaults, so ILI9341 boards no longer need build-file edits.
+- GitHub Actions builds every board on each push and, for a tag, publishes a
+  release with the flashable images (`CYD-Weather-<env>-factory.bin`).
+
+### Changed
+- All dependencies and the PlatformIO platform are pinned to the versions
+  this project is built and tested with (previously `lvgl@^8.3.11` had drifted
+  to 8.4.0 and `TouchWifiProvisioner` tracked the git branch head).
+- README: install instructions for the release files; removed the link to the
+  upstream project's web flasher (it installs the upstream firmware, not this
+  fork's); corrected the panel description (ILI9341 *or* ST7789).
+- `fix01.md` moved to `docs/`.
+
+### Fixed
+- Touch could stop responding for good after a WiFi outage: the touch driver
+  only read the controller after an interrupt edge on GPIO36 and never
+  recovered if one edge was missed. It now samples the controller on every
+  poll, so there is no interrupt state that can get stuck. (Not reproducible
+  on demand, so unconfirmed against the original report.)
+
 ## [1.4.5] - 2026-08-10
 
 ### Added
