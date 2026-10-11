@@ -14,7 +14,6 @@ built-in web portal for setup — no companion app or cloud account required.
 ![CYD Weather running on the device](CYD-Weather-photo.jpg)
 
 **Install the easy way:** open the [web installer](https://grey-lancaster.github.io/CYD_Weather/) in Chrome or Edge, plug in the board and click the button for your board (see [Which build?](#which-build)). Or download the `*-factory.bin` from the [releases](https://github.com/Grey-Lancaster/CYD_Weather/releases) and flash it at offset 0 (see [Installing](#installing)).
-(The web flasher at henryscat.github.io installs the *upstream* project's firmware, not this fork's.)
 
 <sub>Hardware: ESP32-WROOM-32, 2.8" 320x240 TFT (ILI9341 or ST7789, see
 [Which build?](#which-build)), XPT2046 resistive touch. Software: Arduino
@@ -251,13 +250,3 @@ src/
 | BOOT button (tap: System Info page; hold 10s: factory reset) | 0 |
 | RGB LED (unused, active low) | 4 / 16 / 17 |
 | LDR light sensor (unused) | 34 |
-
-## Roadmap
-
-- Weather Trends: 7-day / 30-day views (currently 24h only — the log already
-  stores enough for both; would need a coarser point-decimation step since
-  `WeatherTrendsPage::kMaxPoints` is sized for 24h at the log's 15-min floor)
-- Touch calibration page (values already persisted & settable via API)
-- Auto-brightness from the LDR; status LED as network indicator
-- Weather alert thresholds are configurable in `AppSettings` but not yet
-  exposed in the web portal UI
