@@ -74,6 +74,13 @@ is damaged, just flash another one.
 Orientation, colour order, mirroring and inversion are settings in the web
 portal (no reflash), so small differences between boards can be corrected there.
 
+## Touch calibration
+
+On the ILI9341 builds the screen asks you to touch five crosshairs the first time it
+starts (touch panels differ between board revisions); it is saved. The ST7789 build
+keeps its original calibration. Any board can redo it: **Recalibrate touch** in the web
+portal's System card (it restarts and asks again), and a factory reset clears it.
+
 ## 3.5" CYD
 
 The `cyd35` build is for the 3.5-inch CYD (ESP32-32E / ESP32-3248S035: ST7796

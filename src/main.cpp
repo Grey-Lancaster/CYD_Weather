@@ -171,9 +171,7 @@ static void startApp(const String& ip) {
   });
   networkManager.begin(settings);
 
-#if defined(BOARD_CYD35)
-  webPortal.onRecalibrate([]() { touchManager.clearCalibration(); });
-#endif
+  webPortal.onRecalibrate([]() { touchManager.requestCalibration(); });
   webPortal.begin();
 
   scheduler.add("web.handle", cfg::sched::WEB_HANDLE_MS, []() { webPortal.handle(); });

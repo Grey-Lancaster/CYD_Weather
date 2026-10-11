@@ -10,6 +10,15 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 ## [Unreleased]
 
 ### Added
+- **Touch calibration for the 2.8" boards:** five on-screen crosshairs, then a
+  least-squares fit of a full 2D transform (so any axis direction, inversion or
+  skew of the touch panel is handled), stored in NVS with the display orientation
+  it was made in. Runs automatically on first start of the ILI9341 builds (their
+  touch panels differ between board revisions: on one board the original
+  calibration put taps on the wrong row of the WiFi keyboard); the ST7789 build
+  keeps its original calibration unless you press *Recalibrate touch* in the web
+  portal (new, on every board). The WiFi picker follows the app's orientation once
+  a calibration exists.
 - **Watchdog:** if the main loop ever stops running for 60 seconds, the
   device restarts instead of freezing.
 - **Last restart reason** (power on, reset button, software restart, crash,
@@ -39,6 +48,13 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 - `fix01.md` moved to `docs/`.
 
 ### Fixed
+- **Touch died as soon as the web portal was opened** (and stayed dead until a
+  reboot) on boards with an SD card in the slot. The portal page checks for an SD
+  card on load; that borrows the VSPI peripheral the touch controller shares, and
+  `SPIClass::begin()` is a no-op while the object thinks the bus is still up, so
+  the touch pins were never re-attached afterwards. `TouchManager::reacquireBus()`
+  now calls `end()` first. Verified on hardware (touch works after the SD check).
+  This may also explain some "touch stops responding" reports.
 - Touch could stop responding for good after a WiFi outage: the touch driver
   only read the controller after an interrupt edge on GPIO36 and never
   recovered if one edge was missed. It now samples the controller on every

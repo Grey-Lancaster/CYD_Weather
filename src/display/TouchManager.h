@@ -44,15 +44,27 @@ class TouchManager {
   void applySettings(const AppSettings& settings);
   void poll();
 
-  // 3.5" board: true until a calibration has been stored. Always false on the
-  // 2.8" boards, which use the persisted raw-range values instead.
+  // True when the touch screen must be calibrated before use: always on the 3.5"
+  // board, on the ILI9341 2.8" builds (their touch panels differ between board
+  // revisions), and on any board after requestCalibration(). The ST7789 build
+  // keeps its original raw-range calibration unless calibration is requested.
   bool needsCalibration() const { return _needsCal; }
-  // Interactive four-corner calibration (blocks until all corners are touched).
-  // Draw in absolute panel coordinates: call DisplayManager::resetViewport()
-  // first and applyViewport() afterwards. No-op on the 2.8" boards.
+  // True when a stored calibration maps the taps. The WiFi picker then follows
+  // the app's own display orientation instead of the legacy forced rotation.
+  bool usesCalibration() const { return _useAffine; }
+  // Interactive calibration (blocks until every target is touched): five crosshairs
+  // at known screen positions, then a least-squares fit of a full 2D transform, so
+  // any axis direction, inversion or skew of the touch panel is handled. Stored in
+  // NVS together with the display orientation it was made in. Draws in absolute
+  // panel coordinates: call DisplayManager::resetViewport() first and
+  // applyViewport() afterwards (a no-op on 320x240 panels).
   void runCalibration();
-  // Forget the stored calibration (the next start asks again). No-op on 2.8".
+  // Forget the stored calibration (factory reset; the next start asks again where
+  // it is required).
   void clearCalibration();
+  // Opt in to calibration (web portal "Recalibrate touch"): forgets the current
+  // one and makes the next start run it, on every board.
+  void requestCalibration();
 
   // Re-applies this bus's pin mapping to the shared VSPI peripheral. Needed
   // after anything else borrows VSPI with a different pin mapping — namely
@@ -125,4 +137,7 @@ class TouchManager {
   bool _gestureConsumed = false;
   bool _ok = false;
   bool _needsCal = false;
+  bool _useAffine = false;  // taps are mapped by the stored calibration
+  float _aff[6] = {1, 0, 0, 0, 1, 0};  // x = a*rx + b*ry + c, y = d*rx + e*ry + f
+  uint8_t orientationSig() const;
 };

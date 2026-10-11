@@ -67,14 +67,18 @@ void begin(DisplayManager& display, TouchManager& touch, const char* hostname,
   // see rawTouchProvisioning()'s header comment. This overrides whatever
   // DisplayManager::begin() already applied for the main app; startApp()
   // restores it via DisplayManager::applySettings() once connected.
-  display.tft().setRotation(3);
+  if (!touch.usesCalibration()) {
+    display.tft().setRotation(3);
+    touch.setProvisioningRotation(true);
+  }
+  // With a stored touch calibration the picker simply follows the app's own display
+  // orientation (the calibration was made in it), so nothing is forced above.
 #if defined(BOARD_CYD35)
-  // setRotation() reset the viewport; the picker flushes in absolute panel
-  // coordinates (see dispFlush), so leave it off and clear the border.
+  // The picker flushes in absolute panel coordinates (see dispFlush), so leave the
+  // UI viewport off and clear the border.
   display.resetViewport();
   display.tft().fillScreen(TFT_BLACK);
 #endif
-  touch.setProvisioningRotation(true);
 
   lv_init();
 
