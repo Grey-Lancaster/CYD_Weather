@@ -101,3 +101,57 @@ jobs:
           body_path: release_body.md
           files: dist/*
           prerelease: ${{ contains(github.ref_name, '-') }}
+
+  # Refresh the web installer (the gh-pages branch, served by GitHub Pages) with
+  # this tag's factory images. The page itself is never touched, only the images
+  # and the four manifests, whose version the page displays.
+  installer:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Update images and manifests
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          for env in cyd cyd2usb cyd2b cyd35; do
+            case $env in
+              cyd)     PANEL="ILI9341, normal colours";;
+              cyd2usb) PANEL="ST7789";;
+              cyd2b)   PANEL="ILI9341, inverted colours";;
+              cyd35)   PANEL="3.5-inch, ST7796";;
+            esac
+            cp dist/CYD-Weather-$env-factory.bin CYD-Weather-$env.bin
+            cat > $env.json <<JSON
+          {
+            "name": "CYD Weather $VERSION ($PANEL)",
+            "version": "$VERSION",
+            "builds": [
+              {
+                "chipFamily": "ESP32",
+                "improv": false,
+                "parts": [
+                  { "path": "CYD-Weather-$env.bin", "offset": 0 }
+                ]
+              }
+            ]
+          }
+          JSON
+          done
+          cat cyd.json
+
+      - name: Publish
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "Web installer: ${GITHUB_REF_NAME}"
+          git push
