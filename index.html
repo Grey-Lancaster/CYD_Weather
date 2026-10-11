@@ -21,7 +21,9 @@
   <p>A weather dashboard for the ESP32 &ldquo;Cheap Yellow Display&rdquo; (CYD): forecast, hourly detail, trends, sun &amp; moon and alerts, set up from your phone or computer. Code and docs:
     <a href="https://github.com/Grey-Lancaster/CYD_Weather" target="_blank" rel="noopener">GitHub repository</a>.</p>
 
-  <p class="note"><strong>Release candidate 2.0.0-rc2.</strong> This is a test version of the new 2.0 release. The 3.5-inch build (button 4) has not been tried on real hardware yet &mdash; if you test it, please tell us how it went in the <a href="https://github.com/Grey-Lancaster/CYD_Weather/issues" target="_blank" rel="noopener">issues</a>.</p>
+  <p>Version on this page: <strong id="ver">&hellip;</strong></p>
+
+  <p class="note" id="rcnote" hidden><strong>This is a release candidate</strong> (a test version). The 3.5-inch build (button 4) has not been tried on real hardware yet &mdash; if you test it, please tell us how it went in the <a href="https://github.com/Grey-Lancaster/CYD_Weather/issues" target="_blank" rel="noopener">issues</a>.</p>
 
   <p>Plug the board into your computer with a USB cable and click the button for your board, using <strong>Chrome or Edge</strong> (a browser with Web Serial; Firefox and Safari can&rsquo;t do this). If no serial port shows up, install the CH340 USB driver below.</p>
 
@@ -63,5 +65,12 @@
 
   <p>Prefer the files? All images are on the <a href="https://github.com/Grey-Lancaster/CYD_Weather/releases" target="_blank" rel="noopener">releases page</a>. Looking for the PhotoFrame firmware? <a href="https://grey-lancaster.github.io/CYD-PhotoFrame/">Install CYD PhotoFrame</a>.</p>
 
+<script>
+// The version comes from the manifest the release workflow writes, so this page never goes stale.
+fetch('./cyd.json').then(r=>r.json()).then(m=>{
+  document.getElementById('ver').textContent=m.version;
+  if(m.version.indexOf('-')>=0)document.getElementById('rcnote').hidden=false;
+}).catch(()=>{document.getElementById('ver').textContent='see releases page'});
+</script>
 </body>
 </html>
