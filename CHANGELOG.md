@@ -9,6 +9,10 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 
 ## [Unreleased]
 
+## [2.0.0-rc2] - 2026-10-11
+
+Second release candidate. Adds over-the-air updates (boards on an older version need one `-factory` flash first), swipe-only page navigation, and fixes for the status bar and the Trends title.
+
 ### Changed
 - **Pages change by swiping only.** A tap anywhere no longer jumps to the next page;
   taps operate controls (forecast cards, graph tabs) and restart the auto-rotate timer.
