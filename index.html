@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Install CYD Weather on a Cheap Yellow Display (ESP32) straight from your browser: pick your board, click, done.">
+  <title>Install CYD Weather</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, sans-serif; max-width: 46rem; margin: 0 auto; padding: 1rem 16px 3rem; line-height: 1.5; }
+    h1 { font-size: 1.6rem; }
+    h2 { font-size: 1.15rem; margin-top: 2rem; }
+    code { background: rgba(127,127,127,.2); padding: .1em .35em; border-radius: 4px; }
+    .note { border-left: 4px solid #d9a400; padding: .1rem .8rem; background: rgba(217,164,0,.12); }
+    esp-web-install-button { display: block; margin: 14px 0; }
+  </style>
+</head>
+<body>
+
+  <h1>Install CYD Weather</h1>
+  <p>A weather dashboard for the ESP32 &ldquo;Cheap Yellow Display&rdquo; (CYD): forecast, hourly detail, trends, sun &amp; moon and alerts, set up from your phone or computer. Code and docs:
+    <a href="https://github.com/Grey-Lancaster/CYD_Weather" target="_blank" rel="noopener">GitHub repository</a>.</p>
+
+  <p class="note"><strong>Release candidate 2.0.0-rc2.</strong> This is a test version of the new 2.0 release. The 3.5-inch build (button 4) has not been tried on real hardware yet &mdash; if you test it, please tell us how it went in the <a href="https://github.com/Grey-Lancaster/CYD_Weather/issues" target="_blank" rel="noopener">issues</a>.</p>
+
+  <p>Plug the board into your computer with a USB cable and click the button for your board, using <strong>Chrome or Edge</strong> (a browser with Web Serial; Firefox and Safari can&rsquo;t do this). If no serial port shows up, install the CH340 USB driver below.</p>
+
+  <p><strong>Which button?</strong> It depends on the display panel in your board, not on the number of USB ports. Start with button 1. A wrong choice shows a <em>white screen</em> or odd colours; nothing is damaged, just flash another button.</p>
+
+  <p><strong>Note:</strong> installing from this page replaces everything on the board, including a saved WiFi login and settings, and the first start asks for WiFi again (on the 2.8&Prime; boards it also asks you to touch five crosshairs to calibrate touch). To update a board that already runs 2.0 and keep its settings, use <em>Firmware update</em> on its settings page instead (see the README).</p>
+
+  <script type="module" src="https://unpkg.com/esp-web-tools@10.0.1/dist/web/install-button.js?module"></script>
+
+  <h2>1. CYD &mdash; ILI9341 display, normal colours</h2>
+  <p>The standard CYD and many boards with two USB ports. Try this one first.</p>
+  <esp-web-install-button manifest="./cyd.json"></esp-web-install-button>
+
+  <h2>2. CYD2 &mdash; ST7789 display</h2>
+  <p>Boards with two USB ports and an ST7789 display. Choose this if button 1 gives a white screen.</p>
+  <esp-web-install-button manifest="./cyd2usb.json"></esp-web-install-button>
+
+  <h2>3. CYD2 alternate &mdash; ILI9341 display, inverted colours</h2>
+  <p>Choose this if button 1 shows a negative picture (colours inverted).</p>
+  <esp-web-install-button manifest="./cyd2b.json"></esp-web-install-button>
+
+  <h2>4. 3.5-inch CYD &mdash; ST7796 display, 480&times;320</h2>
+  <p>Only for the 3.5-inch CYD (for example the ESP32-32E / ESP32-3248S035). The dashboard is shown centred on the larger screen, and the first start asks you to touch four corners to calibrate touch.</p>
+  <esp-web-install-button manifest="./cyd35.json"></esp-web-install-button>
+
+  <h2>After installing</h2>
+  <ol>
+    <li>Pick your WiFi network on the screen and type its password.</li>
+    <li>The screen then shows the board&rsquo;s IP address and name (for example <code>cyd-weather.local</code>) for 15 seconds. Open that address in a browser to set your location, units and display options. Forgot it? Press the <strong>BOOT</strong> button on the board to see it again.</li>
+    <li>Swipe left or right on the screen to change pages.</li>
+  </ol>
+
+  <h2>Do you need CH340 drivers?</h2>
+  <p>If your computer doesn&rsquo;t see the board when you click an install button, install the CH340 USB-to-serial driver, then unplug and reconnect the board:</p>
+  <ul>
+    <li><a href="https://sparks.gogo.co.nz/assets/_site_/downloads/CH34x_Install_Windows_v3_4.zip" target="_blank" rel="noopener">Windows driver (CH340)</a></li>
+    <li><a href="https://sparks.gogo.co.nz/assets/_site_/downloads/CH34x_Install_Mac_v1.5.zip" target="_blank" rel="noopener">Mac driver (CH340)</a></li>
+  </ul>
+
+  <p>Prefer the files? All images are on the <a href="https://github.com/Grey-Lancaster/CYD_Weather/releases" target="_blank" rel="noopener">releases page</a>. Looking for the PhotoFrame firmware? <a href="https://grey-lancaster.github.io/CYD-PhotoFrame/">Install CYD PhotoFrame</a>.</p>
+
+</body>
+</html>

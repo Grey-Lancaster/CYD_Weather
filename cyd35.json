@@ -1,0 +1,13 @@
+{
+  "name": "CYD Weather 2.0.0-rc2 (3.5-inch, ST7796)",
+  "version": "2.0.0-rc2",
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "improv": false,
+      "parts": [
+        { "path": "CYD-Weather-cyd35.bin", "offset": 0 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "CYD Weather 2.0.0-rc2 (ST7789)",
+  "version": "2.0.0-rc2",
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "improv": false,
+      "parts": [
+        { "path": "CYD-Weather-cyd2usb.bin", "offset": 0 }
+      ]
+    }
+  ]
+}
