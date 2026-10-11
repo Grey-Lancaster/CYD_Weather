@@ -38,7 +38,7 @@ alert banner when one is active.
 | — | **Day Hourly** (drill-down) | Reached by tapping a 5-Day Forecast card; not part of the rotation. |
 | — | **Setup** | Shown automatically in AP/recovery mode; also reachable manually. |
 | — | **System Info** | IP address, hostname and device diagnostics; reached via the physical **BOOT** button, off the normal rotation. |
-| — | **Connected / Configure it here** | Shown for 10 seconds after the first WiFi connection: the IP address and hostname of the settings portal. |
+| — | **Connected / Configure it here** | Shown for 15 seconds after the first WiFi connection: the IP address and hostname of the settings portal. |
 
 The first three live pages, Sun & Moon, and Weather Alerts all share one
 Open-Meteo-style HTTP request per refresh cycle (default every 15 minutes),
@@ -148,7 +148,7 @@ a separate library that owns the screen (via LVGL) only for this brief
 pre-connect step, then hands off to the app below once connected.
 
 As soon as it connects, a **"Connected to WiFi — Configure it here"** screen shows
-the device's **IP address and hostname** for 10 seconds (tap to skip), then the
+the device's **IP address and hostname** for 15 seconds (tap to skip), then the
 dashboard starts. Open either address in a browser on the same network to set your
 location, units and the rest: `http://cyd-weather.local` (mDNS) or
 `http://<the IP address shown>`.

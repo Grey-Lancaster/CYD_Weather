@@ -16,7 +16,9 @@ constexpr uint8_t kSubHeaderFont = 1;  // GLCD base font — compact, matches th
 // Footer graph-selector tabs, one per Graph value, pinned just above the
 // shared page-indicator dots (which PageManager draws below INDICATOR_Y —
 // this page never touches that strip itself).
-constexpr int32_t kFooterH = 22;
+constexpr int32_t kFooterH = 28;
+// Resistive touch is imprecise: accept taps a bit above the drawn tabs too.
+constexpr int32_t kTapSlopY = 14;
 constexpr int32_t kFooterY0 = ui::layout::INDICATOR_Y - kFooterH;
 constexpr uint8_t kTabCount = 5;  // == (uint8_t)Graph::Count
 constexpr int32_t kTabW = ui::layout::CARD_W / kTabCount;
@@ -92,7 +94,7 @@ bool WeatherTrendsPage::handleTap(int16_t x, int16_t y) {
   // falls through to PageManager's default "advance to next page" handling,
   // same as every other page (this page adds a control, it doesn't change
   // what an unconsumed tap already does).
-  if (y < kFooterY0 || y >= kFooterY0 + kFooterH) return false;
+  if (y < kFooterY0 - kTapSlopY || y >= ui::layout::INDICATOR_Y) return false;
   const int32_t relX = x - ui::layout::CARD_MARGIN_X;
   if (relX < 0 || relX >= ui::layout::CARD_W) return false;
 

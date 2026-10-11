@@ -10,7 +10,7 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 ## [Unreleased]
 
 ### Added
-- **"Configure it here" screen** for 10 seconds right after the first WiFi
+- **"Configure it here" screen** for 15 seconds right after the first WiFi
   connection, showing the device's IP address and hostname (tap to skip), and a
   Hostname row on System Information (BOOT button), so the settings portal is easy
   to find. The README explains both.
