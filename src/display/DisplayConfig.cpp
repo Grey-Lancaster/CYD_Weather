@@ -36,7 +36,15 @@ void DisplayConfig::apply(TFT_eSPI& tft, const AppSettings& settings) {
   // overwritten below with our own colour-order/mirror/rotate90 bits.
   tft.setRotation(rotation);
   tft.writecommand(CMD_MADCTL);
+#if defined(BOARD_CYD35)
+  // The 3.5" panel is natively landscape (no MV wiring quirk to compensate), and
+  // turning MV off would make the 480x320 panel portrait, pushing the centred
+  // 320x240 UI off-screen. The setting is ignored here (and hidden in the portal).
+  const bool rotate90 = false;
+#else
+  const bool rotate90 = settings.rotate90 != 0;
+#endif
   tft.writedata(buildMadctl(settings.displayFlipped != 0, static_cast<ColorOrder>(settings.colorOrder),
-                            settings.mirrorH != 0, settings.mirrorV != 0, settings.rotate90 != 0));
+                            settings.mirrorH != 0, settings.mirrorV != 0, rotate90));
   tft.invertDisplay(settings.invertColors != 0);
 }

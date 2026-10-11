@@ -155,7 +155,7 @@ dt{color:#96aabe}dd{margin:0}
 <select name="colorOrder"><option value="0">RGB</option><option value="1">BGR</option></select>
 <label>Screen rotation</label>
 <select name="displayFlipped"><option value="0">Normal (USB right)</option><option value="1">Flipped 180&deg; (USB left)</option></select>
-<div class="check"><input name="rotate90" type="checkbox" id="rot90"><label for="rot90">Rotate display 90&deg;</label></div>
+<div class="check" id="rot90Row"><input name="rotate90" type="checkbox" id="rot90"><label for="rot90">Rotate display 90&deg;</label></div>
 <p class="hint">Enable this if the screen shows portrait and cropped on first start.</p>
 <div class="check"><input name="mirrorH" type="checkbox" id="mirh"><label for="mirh">Mirror display</label></div>
 <p class="hint">Enable this if the screen shows text and images left-right reversed, as on some CYD panel variants.</p>
@@ -226,6 +226,7 @@ el('st-rssi').textContent=s.wifi.rssi?s.wifi.rssi+' dBm':'-';
 el('st-up').textContent=s.uptime;
 el('st-rs').textContent=s.lastRestart||'-';
 el('recalBtn').style.display=s.recalSupported?'':'none';
+{const h=s.rotate90Supported===false?'none':'';el('rot90Row').style.display=h;el('rot90Row').nextElementSibling.style.display=h}
 el('st-heap').textContent=(s.heapFree/1024).toFixed(1)+' KB';
 el('st-wxsrc').textContent=s.weather.provider;
 el('st-wxupd').textContent=s.weather.valid?s.weather.lastUpdate+(s.weather.failed?' (last fetch failed, retrying)':''):(s.weather.failed?'Fetch failed':'Fetching…');

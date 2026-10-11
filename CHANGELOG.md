@@ -9,6 +9,11 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 
 ## [Unreleased]
 
+### Fixed
+- 3.5" board: "Rotate display 90°" shifted the dashboard to the top-right and cut it off
+  (reported by a tester). That setting only compensates a wiring quirk of some 2.8"
+  boards, so it is now ignored on the 3.5" build and hidden in the portal.
+
 ## [2.0.0-rc2] - 2026-10-11
 
 Second release candidate. Adds over-the-air updates (boards on an older version need one `-factory` flash first), swipe-only page navigation, and fixes for the status bar and the Trends title.

@@ -280,6 +280,11 @@ void WebPortal::handleStatus() {
   doc["uptime"] = up;
   doc["lastRestart"] = resetReasonText();
   doc["recalSupported"] = (bool)_onRecalibrate;
+#if defined(BOARD_CYD35)
+  doc["rotate90Supported"] = false;
+#else
+  doc["rotate90Supported"] = true;
+#endif
   doc["heapFree"] = ESP.getFreeHeap();
   doc["heapMin"] = ESP.getMinFreeHeap();
   JsonObject wifi = doc["wifi"].to<JsonObject>();
