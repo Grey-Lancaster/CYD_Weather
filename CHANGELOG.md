@@ -9,6 +9,10 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 
 ## [Unreleased]
 
+## [2.0.0-rc1] - 2026-10-11
+
+Release candidate: adds the 3.5" CYD (`cyd35`) build for testing, plus a modernised, pinned build for every board.
+
 ### Added
 - **Screenshot** button in the web portal (opens the existing screen mirror) with a
   **Save PNG** download, for troubleshooting and sharing.
