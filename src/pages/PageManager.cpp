@@ -193,9 +193,7 @@ void PageManager::tick(uint32_t nowMs) {
 void PageManager::handleTap(int16_t x, int16_t y) {
   if (_count == 0) return;
   if (y < (int16_t)theme().statusBarH) return;  // status bar taps reserved
-  if (_pages[_active]->handleTap(x, y)) {
-    _activeSinceMs = millis();  // interacting with a page restarts its auto-rotate timer
-  } else {
-    next();
-  }
+  // Pages change by swiping (see main.cpp), not by tapping: a tap only goes to
+  // the page's own controls, and using one restarts the auto-rotate timer.
+  if (_pages[_active]->handleTap(x, y)) _activeSinceMs = millis();
 }

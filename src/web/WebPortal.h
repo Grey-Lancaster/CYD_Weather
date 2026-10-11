@@ -28,6 +28,8 @@
 //   GET  /api/sdcard/status    {"present": bool}
 //   POST /api/sdcard/backup    write the same backup JSON to the SD card
 //   POST /api/sdcard/restore   read it back from the SD card and apply
+//   POST /update              firmware image (multipart upload, field "firmware"):
+//                              written to the idle app slot, then restart
 //   GET  /mirror               screen-mirror viewer page (manual/auto refresh)
 //   GET  /mirror.bmp           current TFT contents as a 24-bit BMP, read
 //                              back over SPI row-by-row (no framebuffer
@@ -77,6 +79,8 @@ class WebPortal {
   void handleSdCardBackup();
   void handleSdCardRestore();
   void handleMirror();
+  void handleUpdateDone();
+  void handleUpdateUpload();
   void handleMirrorImage();
   void handleNotFound();
   void sendJson(int code, const JsonDocument& doc);
@@ -93,4 +97,7 @@ class WebPortal {
   RecalibrateCallback _onRecalibrate;
   uint32_t _restartAtMs = 0;
   uint32_t _applyAtMs = 0;
+  bool _updateOk = false;
+  bool _updateFirstChunk = false;
+  String _updateError;
 };

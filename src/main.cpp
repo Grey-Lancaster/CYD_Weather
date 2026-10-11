@@ -9,6 +9,7 @@
 // the app itself draws directly via TFT_eSPI instead of LVGL.
 // ============================================================================
 #include <Arduino.h>
+#include <esp_ota_ops.h>
 #include <esp_task_wdt.h>
 
 #include "config/AppConfig.h"
@@ -293,6 +294,9 @@ void setup() {
   Log::begin(cfg::serial::BAUD);
   LOGI(TAG, "%s v%s (built %s)", FW_NAME, FW_VERSION, FW_BUILD_DATE);
   LOGI(TAG, "last restart: %s", resetReasonText());
+  if (const esp_partition_t* running = esp_ota_get_running_partition()) {
+    LOGI(TAG, "running from %s", running->label);
+  }
 
   SettingsManager& settingsManager = SettingsManager::instance();
   settingsManager.loadSettings();

@@ -1,10 +1,14 @@
 #include "web/WebPortal.h"
 
+#include <Update.h>
+#include <esp_task_wdt.h>
+
 #include <new>
 
 #include "config/AppConfig.h"
 #include "config/Version.h"
 #include "storage/SettingsBackup.h"
+#include "ui/Theme.h"
 #include "utils/Format.h"
 #include "utils/Log.h"
 #include "utils/ResetReason.h"
@@ -38,6 +42,8 @@ bool WebPortal::begin() {
   _http.on("/api/sdcard/status", HTTP_GET, [this]() { handleSdCardStatus(); });
   _http.on("/api/sdcard/backup", HTTP_POST, [this]() { handleSdCardBackup(); });
   _http.on("/api/sdcard/restore", HTTP_POST, [this]() { handleSdCardRestore(); });
+  _http.on("/update", HTTP_POST, [this]() { handleUpdateDone(); },
+           [this]() { handleUpdateUpload(); });
   _http.on("/mirror", HTTP_GET, [this]() { handleMirror(); });
   _http.on("/mirror.bmp", HTTP_GET, [this]() { handleMirrorImage(); });
   _http.onNotFound([this]() { handleNotFound(); });
@@ -61,6 +67,69 @@ void WebPortal::handle() {
 
 void WebPortal::handleRoot() {
   _http.send_P(200, "text/html", WEB_INDEX_HTML);
+}
+
+// Over-the-air update: the browser POSTs the firmware .bin (not the *-factory
+// image); it is streamed into the idle OTA slot and only becomes the boot slot
+// if the whole image verifies. The upload callback runs inside handleClient(),
+// so the task watchdog is fed per chunk.
+void WebPortal::handleUpdateUpload() {
+  HTTPUpload& up = _http.upload();
+  esp_task_wdt_reset();
+  if (up.status == UPLOAD_FILE_START) {
+    _updateOk = false;
+    _updateFirstChunk = true;
+    _updateError = "";
+    LOGW(TAG, "OTA start: %s", up.filename.c_str());
+    TFT_eSPI& tft = _display.tft();
+    tft.fillScreen(theme().bg);
+    tft.setTextDatum(MC_DATUM);
+    tft.setTextFont(theme().fontSmall);
+    tft.setTextColor(theme().textPrimary, theme().bg);
+    tft.drawString("Updating firmware...", cfg::display::WIDTH / 2, cfg::display::HEIGHT / 2 - 8);
+    tft.setTextColor(theme().textSecondary, theme().bg);
+    tft.drawString("Do not power off", cfg::display::WIDTH / 2, cfg::display::HEIGHT / 2 + 12);
+    if (!Update.begin(UPDATE_SIZE_UNKNOWN)) _updateError = Update.errorString();
+  } else if (up.status == UPLOAD_FILE_WRITE) {
+    if (_updateError.length() == 0) {
+      // First byte of every app image is 0xE9; anything else (a factory image,
+      // a settings backup, ...) is rejected before it is written.
+      if (_updateFirstChunk && up.currentSize > 0 && up.buf[0] != 0xE9) {
+        _updateError = "not a firmware image (use the plain firmware .bin, not *-factory.bin)";
+        Update.abort();
+      } else if (Update.write(up.buf, up.currentSize) != up.currentSize) {
+        _updateError = Update.errorString();
+      }
+      _updateFirstChunk = false;
+    }
+  } else if (up.status == UPLOAD_FILE_END) {
+    if (_updateError.length() == 0) {
+      if (Update.end(true)) {
+        _updateOk = true;
+      } else {
+        _updateError = Update.errorString();
+      }
+    }
+  } else if (up.status == UPLOAD_FILE_ABORTED) {
+    Update.abort();
+    _updateError = "upload aborted";
+  }
+}
+
+void WebPortal::handleUpdateDone() {
+  if (_updateOk) {
+    LOGW(TAG, "OTA ok, restarting");
+    _http.send(200, "application/json", "{\"ok\":true}");
+    scheduleRestart();
+  } else {
+    const String msg = _updateError.length() ? _updateError : String("no firmware received");
+    LOGE(TAG, "OTA failed: %s", msg.c_str());
+    JsonDocument doc;
+    doc["error"] = msg;
+    sendJson(500, doc);
+    // The screen was taken over at upload start; a restart puts the dashboard back.
+    scheduleRestart();
+  }
 }
 
 void WebPortal::handleMirror() {

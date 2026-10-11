@@ -189,7 +189,23 @@ dt{color:#96aabe}dd{margin:0}
 <button type="button" onclick="armConfirm(this,sdRestore)">Restore from SD card</button>
 </div>
 </div>
+<div class="card">
+<h2>Firmware update</h2>
+<p class="hint">Choose the plain <b>CYD-Weather-&lt;board&gt;-firmware.bin</b> for your board from the GitHub release (not the <i>-factory</i> file). The device restarts when the upload finishes; settings and WiFi are kept.</p>
+<input type="file" id="fwFile" accept=".bin">
+<button type="button" onclick="armConfirm(this,fwUpdate)">Update</button>
+<div id="fwMsg" class="hint"></div>
+</div>
 <script>
+function fwUpdate(){
+const f=el('fwFile').files[0],m=el('fwMsg');
+if(!f){m.textContent='Choose a firmware .bin first.';return}
+const x=new XMLHttpRequest(),d=new FormData();d.append('firmware',f,f.name);
+x.upload.onprogress=e=>{if(e.lengthComputable)m.textContent='Uploading '+Math.round(e.loaded*100/e.total)+'%'};
+x.onload=()=>{if(x.status===200){m.textContent='Done. Restarting...';setTimeout(()=>location.reload(),15000)}else{let t=x.responseText;try{t=JSON.parse(t).error}catch(e){}m.textContent='Update failed: '+t}};
+x.onerror=()=>{m.textContent='Connection lost (the device may already be restarting).'};
+x.open('POST','/update');x.send(d);
+}
 async function j(u,o){const r=await fetch(u,o);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
 function el(i){return document.getElementById(i)}
 function setVal(e,v){if(e.type==='checkbox'){e.checked=!!v}else{e.value=v}}

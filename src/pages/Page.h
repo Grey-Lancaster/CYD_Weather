@@ -12,7 +12,7 @@
 //
 // Input contract:
 //  - handleTap returns true when the tap was consumed; an unconsumed tap
-//    makes PageManager advance to the next page.
+//    is ignored: pages change by swiping (see main.cpp).
 class Page {
  public:
   virtual ~Page() {}

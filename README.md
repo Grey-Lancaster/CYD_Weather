@@ -22,8 +22,9 @@ framework + TFT_eSPI (no LVGL), modular C++, fully non-blocking main loop.</sub>
 
 ## Dashboard pages
 
-Swipe (or wait for auto-rotation) to move between pages; tap a 5-Day card to
-drill into that day's hourly detail. A persistent status bar (location, date,
+Swipe left or right (or wait for auto-rotation) to move between pages. Taps
+only operate controls: tap a 5-Day card to drill into that day's hourly detail,
+or a graph tab on the Weather Trends page to pick that graph. A persistent status bar (location, date,
 time, network indicator) sits above every page and doubles as the weather
 alert banner when one is active.
 
@@ -135,12 +136,13 @@ pio device monitor                 # 115200 baud, exception decoder enabled
 GitHub Actions builds every board on each push and attaches the flashable
 images to each release.
 
-There is no OTA update mechanism — the board's default dual-app A/B
-partition table has been replaced with a single-app layout
-([partitions.csv](partitions.csv)) to reclaim the unused second app slot for
-flash headroom. Re-flashing preserves NVS settings/WiFi credentials but
-resets the on-device weather history log (its LittleFS partition
-moves/resizes).
+**Updating later over WiFi:** open the settings portal, scroll to **Firmware
+update**, choose the plain `CYD-Weather-<board>-firmware.bin` from the release
+(not the `-factory` file) and press Update. The device restarts by itself and
+keeps its settings and WiFi. This needs the dual-app layout in
+[partitions.csv](partitions.csv), so a board that ran an older version must be
+flashed once with the `-factory` file (USB or the web installer); after that,
+updates are wireless. That one-time flash resets the weather history log.
 
 ## First boot
 
@@ -160,7 +162,7 @@ location, units and the rest: `http://cyd-weather.local` (mDNS) or
 **Forgot the address?** Press the **BOOT** button (the small button on the back of
 the board, next to the USB port) at any time: it jumps to *System Information*, which
 lists the IP address, hostname, WiFi signal, firmware version and the reason for the
-last restart. Tap or swipe to go back to the dashboard. (Holding BOOT for 10 seconds
+last restart. Swipe to go back to the dashboard. (Holding BOOT for 10 seconds
 is a factory reset, so don't hold it.)
 
 If the connection ever drops, the device keeps trying to reconnect on its

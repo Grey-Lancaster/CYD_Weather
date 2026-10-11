@@ -9,6 +9,16 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 
 ## [Unreleased]
 
+### Changed
+- **Pages change by swiping only.** A tap anywhere no longer jumps to the next page;
+  taps operate controls (forecast cards, graph tabs) and restart the auto-rotate timer.
+
+### Added
+- **Over-the-air firmware update** in the web portal ("Firmware update"). Uses a
+  dual-app partition table, so a board that ran an older version needs one
+  `-factory` flash first (this resets the weather history log). The factory images
+  now also carry the boot-slot table.
+
 ## [2.0.0-rc1] - 2026-10-11
 
 Release candidate: adds the 3.5" CYD (`cyd35`) build for testing, plus a modernised, pinned build for every board.
