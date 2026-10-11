@@ -13,7 +13,7 @@ built-in web portal for setup — no companion app or cloud account required.
 
 ![CYD Weather running on the device](CYD-Weather-photo.jpg)
 
-**Install:** download the `*-factory.bin` for your board from the [latest release](https://github.com/Grey-Lancaster/CYD_Weather/releases/latest) and flash it at offset 0 (see [Installing](#installing)).
+**Install the easy way:** open the [web installer](https://grey-lancaster.github.io/CYD_Weather/) in Chrome or Edge, plug in the board and click the button for your board (see [Which build?](#which-build)). Or download the `*-factory.bin` from the [releases](https://github.com/Grey-Lancaster/CYD_Weather/releases) and flash it at offset 0 (see [Installing](#installing)).
 (The web flasher at henryscat.github.io installs the *upstream* project's firmware, not this fork's.)
 
 <sub>Hardware: ESP32-WROOM-32, 2.8" 320x240 TFT (ILI9341 or ST7789, see
@@ -108,7 +108,7 @@ it was written from a user's pin list. Reports are welcome in the issues.
 
 ## Installing
 
-Download `CYD-Weather-<build>-factory.bin` from the
+The simplest way is the [web installer](https://grey-lancaster.github.io/CYD_Weather/): no tools to install, just a USB cable and Chrome or Edge. To flash a file yourself instead, download `CYD-Weather-<build>-factory.bin` from the
 [latest release](https://github.com/Grey-Lancaster/CYD_Weather/releases/latest)
 and write it at **offset 0**, either with the browser tool
 <https://espressif.github.io/esptool-js/> (Chrome or Edge) or with esptool:
