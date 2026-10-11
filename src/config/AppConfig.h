@@ -125,6 +125,8 @@ constexpr uint32_t ALERTS_TICK_MS = 5000;
 
 namespace ui {
 constexpr uint8_t MAX_PAGES = 9;
+// "Configure it here" screen (pages/PageConfigInfo) shown after the first WiFi connection.
+constexpr uint16_t CONFIG_INFO_S = 10;
 constexpr uint8_t STATUS_BAR_H = 24;
 constexpr uint32_t PAGE_DATA_REFRESH_MS = 1000;
 // Auto page rotation (cycles the rotatable pages while idle).

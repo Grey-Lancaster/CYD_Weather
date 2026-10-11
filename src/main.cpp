@@ -19,6 +19,7 @@
 #include "network/TimeManager.h"
 #include "network/WifiProvisioning.h"
 #include "pages/CurrentConditionsPage.h"
+#include "pages/PageConfigInfo.h"
 #include "pages/ForecastPage.h"
 #include "pages/HourlyForecastPage.h"
 #include "pages/PageAlerts.h"
@@ -67,6 +68,7 @@ static WeatherTrendsPage weatherTrendsPage(displayManager);
 static PageSunMoon sunMoonPage(displayManager, weatherService);
 static PageAlerts alertsPage(displayManager, weatherAlertManager, weatherService);
 static SystemPage systemPage(displayManager, networkManager);
+static PageConfigInfo configInfoPage(displayManager, networkManager);
 static SettingsConsole settingsConsole;
 static TaskScheduler scheduler;
 // Tracks weatherProvider as of the last-applied settings change, purely so
@@ -118,7 +120,12 @@ static void startApp(const String& ip) {
   // scheduler task below) — pulled out of the normal swipe/tap rotation so
   // it doesn't show up as one of the dashboard's page-indicator dots.
   pageManager.addPage(&systemPage, /*rotatable=*/false);
-  pageManager.setActive((uint8_t)0);
+  // Right after connecting, tell the user where to configure the device (IP and
+  // hostname) for a few seconds, then drop into the dashboard. Not part of the
+  // rotation; System Information (BOOT button) keeps showing the same details.
+  pageManager.addPage(&configInfoPage, /*rotatable=*/false);
+  configInfoPage.onDone([]() { pageManager.setActive(&forecastPage); });
+  pageManager.setActive(&configInfoPage);
   pageManager.setAutoRotate(settings.autoPageRotation != 0, settings.pageDurationS);
 
   // Drill-down from a tapped 5-Day-Forecast card into that day's hourly

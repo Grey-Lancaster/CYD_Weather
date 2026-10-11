@@ -7,7 +7,7 @@
 #include "utils/ResetReason.h"
 
 namespace {
-constexpr uint8_t kRows = 10;
+constexpr uint8_t kRows = 11;
 constexpr int32_t kRowH = ui::layout::BODY_H / kRows;
 constexpr int32_t kLabelX = ui::layout::CARD_MARGIN_X + 10;
 constexpr int32_t kValueX = ui::layout::CARD_MARGIN_X + ui::layout::CARD_W - 10;
@@ -17,7 +17,8 @@ constexpr int32_t kValueX = ui::layout::CARD_MARGIN_X + ui::layout::CARD_W - 10;
 constexpr int32_t kValueColX = ui::layout::CARD_MARGIN_X + ui::layout::CARD_W / 2;
 constexpr int32_t kValueColW =
     ui::layout::CARD_MARGIN_X + ui::layout::CARD_W - kValueColX - 4;
-constexpr const char* kLabels[kRows] = {"Firmware",     "IP Address",     "WiFi Signal",
+constexpr const char* kLabels[kRows] = {"Firmware",     "IP Address",     "Hostname",
+                                        "WiFi Signal",
                                         "Free Heap",    "Uptime",         "Storage Total",
                                         "Storage Used", "Readings Stored", "Last Logged",
                                         "Last Restart"};
@@ -64,6 +65,9 @@ void SystemPage::render(bool full) {
   strlcpy(ip, _network.ipAddress().c_str(), sizeof(ip));
   if (ip[0] == '\0') strlcpy(ip, "-", sizeof(ip));
 
+  char hostName[40];
+  snprintf(hostName, sizeof(hostName), "%s.local", _network.hostname());
+
   char signal[24];
   if (_network.isConnected()) {
     snprintf(signal, sizeof(signal), "%d dBm", (int)_network.rssi());
@@ -92,7 +96,7 @@ void SystemPage::render(bool full) {
   const char* loggedClock = strchr(storage.lastLoggedTime, 'T');
   strlcpy(lastLogged, loggedClock != nullptr ? loggedClock + 1 : "-", sizeof(lastLogged));
 
-  const char* values[kRows] = {"v" FW_VERSION, ip,          signal,       heap,       up,
+  const char* values[kRows] = {"v" FW_VERSION, ip,          hostName,     signal,     heap,       up,
                                storageTotal,   storageUsed, readingCount, lastLogged,
                                resetReasonText()};
   tft.setTextFont(t.fontSmall);

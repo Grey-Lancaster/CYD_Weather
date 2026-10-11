@@ -37,7 +37,8 @@ alert banner when one is active.
 | 6 | **Weather Alerts** | Active/recent alerts (high wind, heavy rain, heat/cold, rapid pressure change, high UV); also banners in the status bar on any page. |
 | — | **Day Hourly** (drill-down) | Reached by tapping a 5-Day Forecast card; not part of the rotation. |
 | — | **Setup** | Shown automatically in AP/recovery mode; also reachable manually. |
-| — | **System Info** | Device/network diagnostics; reached via the physical **BOOT** button, off the normal rotation. |
+| — | **System Info** | IP address, hostname and device diagnostics; reached via the physical **BOOT** button, off the normal rotation. |
+| — | **Connected / Configure it here** | Shown for 10 seconds after the first WiFi connection: the IP address and hostname of the settings portal. |
 
 The first three live pages, Sun & Moon, and Weather Alerts all share one
 Open-Meteo-style HTTP request per refresh cycle (default every 15 minutes),
@@ -146,8 +147,18 @@ the password, done. No phone-borrowed hotspot/captive-portal dance. This is
 a separate library that owns the screen (via LVGL) only for this brief
 pre-connect step, then hands off to the app below once connected.
 
-Once connected, the settings portal is at `http://cyd-weather.local` (mDNS)
-or the device's DHCP address (shown in the status bar / System Info page).
+As soon as it connects, a **"Connected to WiFi — Configure it here"** screen shows
+the device's **IP address and hostname** for 10 seconds (tap to skip), then the
+dashboard starts. Open either address in a browser on the same network to set your
+location, units and the rest: `http://cyd-weather.local` (mDNS) or
+`http://<the IP address shown>`.
+
+**Forgot the address?** Press the **BOOT** button (the small button on the back of
+the board, next to the USB port) at any time: it jumps to *System Information*, which
+lists the IP address, hostname, WiFi signal, firmware version and the reason for the
+last restart. Tap or swipe to go back to the dashboard. (Holding BOOT for 10 seconds
+is a factory reset, so don't hold it.)
+
 If the connection ever drops, the device keeps trying to reconnect on its
 own in the background; it only shows the picker again if there are no
 saved credentials at all (e.g. after a factory reset) or a fresh connect
