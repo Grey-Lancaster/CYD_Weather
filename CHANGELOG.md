@@ -9,6 +9,10 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 
 ## [Unreleased]
 
+## [2.0.0-rc3] - 2026-10-11
+
+Third release candidate: fixes the 3.5" display rotation problem found by the first tester.
+
 ### Fixed
 - 3.5" board: "Rotate display 90°" shifted the dashboard to the top-right and cut it off
   (reported by a tester). That setting only compensates a wiring quirk of some 2.8"
