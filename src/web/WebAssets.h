@@ -173,6 +173,7 @@ dt{color:#96aabe}dd{margin:0}
 </select>
 <button type="submit">Save</button>
 <button type="button" onclick="armConfirm(this,restartNow)">Restart</button>
+<button type="button" onclick="window.open('/mirror','_blank')">Screenshot</button>
 <button type="button" id="recalBtn" style="display:none" onclick="armConfirm(this,recalNow)">Recalibrate touch</button>
 <div id="msg"></div>
 </div>
@@ -298,11 +299,17 @@ label{font-size:.85rem;color:#96aabe;display:flex;align-items:center;gap:.4rem}
 <h1>CYD Weather — Screen Mirror</h1>
 <div class="row">
 <button onclick="refresh()">Refresh</button>
+<button onclick="save()">Save PNG</button>
 <label><input type="checkbox" id="auto" onchange="toggleAuto()"> Auto-refresh (2s)</label>
 </div>
 <img id="shot" src="/mirror.bmp" alt="device screen">
 <script>
 function refresh(){document.getElementById('shot').src='/mirror.bmp?'+Date.now()}
+function save(){
+const i=document.getElementById('shot'),c=document.createElement('canvas');
+c.width=i.naturalWidth;c.height=i.naturalHeight;c.getContext('2d').drawImage(i,0,0);
+c.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='cyd-weather.png';a.click()},'image/png');
+}
 let timer=null;
 function toggleAuto(){
 const on=document.getElementById('auto').checked;

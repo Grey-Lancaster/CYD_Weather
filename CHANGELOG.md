@@ -10,6 +10,8 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 ## [Unreleased]
 
 ### Added
+- **Screenshot** button in the web portal (opens the existing screen mirror) with a
+  **Save PNG** download, for troubleshooting and sharing.
 - **"Configure it here" screen** for 15 seconds right after the first WiFi
   connection, showing the device's IP address and hostname (tap to skip), and a
   Hostname row on System Information (BOOT button), so the settings portal is easy
@@ -52,6 +54,8 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 - `fix01.md` moved to `docs/`.
 
 ### Fixed
+- Weather Trends: the graph name in the title row no longer overlaps the previous one when the graph changes.
+- Status bar: with a weather alert active, the location, date and time were drawn on a bright blue background (the alert icon left its text colours behind).
 - **Touch died as soon as the web portal was opened** (and stayed dead until a
   reboot) on boards with an SD card in the slot. The portal page checks for an SD
   card on load; that borrows the VSPI peripheral the touch controller shares, and

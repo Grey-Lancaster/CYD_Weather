@@ -75,6 +75,10 @@ is damaged, just flash another one.
 Orientation, colour order, mirroring and inversion are settings in the web
 portal (no reflash), so small differences between boards can be corrected there.
 
+**Screenshot:** the portal's **Screenshot** button (or `http://<address>/mirror`)
+shows what is on the display right now, with a **Save PNG** button. Handy for bug
+reports and photos-free posts. The capture pauses the display for about a second.
+
 ## Touch calibration
 
 On the ILI9341 builds the screen asks you to touch five crosshairs the first time it

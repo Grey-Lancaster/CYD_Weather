@@ -115,7 +115,9 @@ void WeatherTrendsPage::render(bool full) {
   TFT_eSPI& tft = _display.tft();
   const Theme& t = theme();
 
-  tft.fillRect(0, ui::layout::BODY_Y, cfg::display::WIDTH, ui::layout::BODY_H, t.bg);
+  // The title row sits above BODY_Y; clear it too or the old graph name shows through.
+  tft.fillRect(0, ui::layout::CONTENT_Y, cfg::display::WIDTH,
+               ui::layout::BODY_H + ui::layout::TITLE_H, t.bg);
   ui::drawPageTitle(tft, "Weather Trends");
 
   // Title line, right-aligned: the selected graph's name.

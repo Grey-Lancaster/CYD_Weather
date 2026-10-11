@@ -124,6 +124,8 @@ void StatusBar::render(bool force) {
       ui::drawAlertIcon(gfx, x0 + t.pad + 6, midY, 6, alert->severity);
       locX += 16;
     }
+    // After the icon: drawAlertIcon() sets its own text colours for the glyph.
+    gfx.setTextColor(t.statusBarText, t.statusBarBg);
     gfx.setTextDatum(ML_DATUM);
     gfx.drawString(location, locX, midY);
     gfx.setTextDatum(MC_DATUM);
