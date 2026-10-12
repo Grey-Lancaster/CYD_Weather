@@ -1,6 +1,6 @@
 {
-  "name": "CYD Weather 2.0.0-rc3 (ILI9341, inverted colours)",
-  "version": "2.0.0-rc3",
+  "name": "CYD Weather 2.0.0-rc4 (ILI9341, inverted colours)",
+  "version": "2.0.0-rc4",
   "builds": [
     {
       "chipFamily": "ESP32",
