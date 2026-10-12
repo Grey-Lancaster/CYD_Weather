@@ -11,7 +11,9 @@ your choice of 20 weather data providers, on-device history logging and
 trend graphs, sunrise/sunset and moon phase, configurable alerts, and a
 built-in web portal for setup — no companion app or cloud account required.
 
-![CYD Weather running on the device](CYD-Weather-photo.jpg)
+![CYD Weather pages: 5-day forecast, current conditions, hourly forecast, weather trends, sun & moon and weather alerts](docs/screenshots/overview.png)
+
+<sub>Screenshots taken from the device itself with the portal's Screenshot button (individual pages are in [docs/screenshots](docs/screenshots)).</sub>
 
 **Install the easy way:** open the [web installer](https://grey-lancaster.github.io/CYD_Weather/) in Chrome or Edge, plug in the board and click the button for your board (see [Which build?](#which-build)). Or download the `*-factory.bin` from the [releases](https://github.com/Grey-Lancaster/CYD_Weather/releases) and flash it at offset 0 (see [Installing](#installing)).
 
