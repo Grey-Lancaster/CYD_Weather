@@ -9,6 +9,11 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 
 ## [Unreleased]
 
+### Fixed
+- 3.5" board: the Screenshot / `/mirror.bmp` came out garbled (repeated, mis-coloured bands).
+  The ST7796 returns 2 bytes per pixel in its 16-bit mode, so the panel is switched to its
+  18-bit mode (3 bytes per pixel) for the capture and back. Untested on the 3.5" hardware.
+
 ### Changed
 - WiFi provisioning library updated to 1.5.0 (pinned): a **Hidden network...** row in
   the picker, and up to five saved networks with automatic reconnection to whichever

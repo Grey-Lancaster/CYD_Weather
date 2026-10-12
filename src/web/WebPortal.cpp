@@ -192,6 +192,13 @@ void WebPortal::handleMirrorImage() {
   const bool needsInvert = (debugMode == 2 || debugMode == 3);
   const bool disableInversionForRead = _http.hasArg("noinv");
   if (disableInversionForRead) tft.invertDisplay(false);
+#if defined(BOARD_CYD35)
+  // The ST7796 answers a pixel read in its current colour mode: 2 bytes per pixel in the
+  // 16-bit mode the UI uses, but readRectRGB() expects 3. Switch to the 18-bit mode for
+  // the capture (3 bytes per pixel, like the ILI9341) and back afterwards.
+  tft.writecommand(0x3A);
+  tft.writedata(0x66);
+#endif
 
   constexpr int32_t kChunkRows = 40;  // 40 * 960B = 37.5KB, well clear of ~200KB free heap
   const bool forceSingleRow = _http.hasArg("single");
@@ -219,6 +226,10 @@ void WebPortal::handleMirrorImage() {
       if (rowPad > 0) _http.sendContent((const char*)kPad, (size_t)rowPad);
     }
     if (disableInversionForRead) tft.invertDisplay(_settings.get().invertColors != 0);
+#if defined(BOARD_CYD35)
+    tft.writecommand(0x3A);
+    tft.writedata(0x55);
+#endif
     return;
   }
 
@@ -267,6 +278,10 @@ void WebPortal::handleMirrorImage() {
   }
 
   if (disableInversionForRead) tft.invertDisplay(_settings.get().invertColors != 0);
+#if defined(BOARD_CYD35)
+  tft.writecommand(0x3A);
+  tft.writedata(0x55);
+#endif
   delete[] chunkBuf;
 }
 
