@@ -9,6 +9,11 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 
 ## [Unreleased]
 
+### Changed
+- WiFi provisioning library updated to 1.5.0 (pinned): a **Hidden network...** row in
+  the picker, and up to five saved networks with automatic reconnection to whichever
+  is in range. A network saved by the older version is carried over automatically.
+
 ## [2.0.0-rc4] - 2026-10-12
 
 Fourth release candidate: flipping the screen 180° no longer needs a new touch calibration.

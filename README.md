@@ -154,6 +154,11 @@ the password, done. No phone-borrowed hotspot/captive-portal dance. This is
 a separate library that owns the screen (via LVGL) only for this brief
 pre-connect step, then hands off to the app below once connected.
 
+The picker has a **Hidden network...** row for networks that don't broadcast their
+name. The board remembers up to five networks and, when it is moved, reconnects to
+whichever known one is in range (tap a network tagged "saved" to connect without
+retyping the password; hold one to forget it).
+
 As soon as it connects, a **"Connected to WiFi — Configure it here"** screen shows
 the device's **IP address and hostname** for 15 seconds (tap to skip), then the
 dashboard starts. Open either address in a browser on the same network to set your
