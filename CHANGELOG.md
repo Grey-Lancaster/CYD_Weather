@@ -9,6 +9,10 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 
 ## [Unreleased]
 
+## [2.0.0-rc4] - 2026-10-12
+
+Fourth release candidate: flipping the screen 180° no longer needs a new touch calibration.
+
 ### Changed
 - Flipping the screen 180° no longer needs a new touch calibration: the stored one is
   reused with both axes reversed, live (no restart). Mirror changes still ask for a
