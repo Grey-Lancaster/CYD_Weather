@@ -9,12 +9,18 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 
 ## [Unreleased]
 
+## [2.0.0-rc5] - 2026-10-12
+
+Fifth release candidate: touch follows the Mirror display setting too, a new WiFi library (hidden and saved networks), and a fix for the 3.5" screenshot.
+
 ### Fixed
 - 3.5" board: the Screenshot / `/mirror.bmp` came out garbled (repeated, mis-coloured bands).
   The ST7796 returns 2 bytes per pixel in its 16-bit mode, so the panel is switched to its
   18-bit mode (3 bytes per pixel) for the capture and back. Untested on the 3.5" hardware.
 
 ### Changed
+- Switching **Mirror display** no longer needs a new touch calibration either (it joins the
+  180° flip): the stored calibration follows it live. Only the 90° setting still asks again.
 - WiFi provisioning library updated to 1.5.0 (pinned): a **Hidden network...** row in
   the picker, and up to five saved networks with automatic reconnection to whichever
   is in range. A network saved by the older version is carried over automatically.

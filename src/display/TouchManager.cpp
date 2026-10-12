@@ -67,8 +67,7 @@ bool TouchManager::begin(const AppSettings& settings) {
     _tft->setTouch(cal);
     _useAffine = true;
     adaptCalibrationToOrientation();
-    const uint8_t diff = (uint8_t)(orientationSig() ^ _calSig);
-    _needsCal = diff != 0 && diff != 1;  // only a 180° flip can be converted
+    _needsCal = !calibrationConvertible();
     if (_needsCal) LOGW(TAG, "stored calibration was made in a different orientation, calibrating again");
   } else {
     _needsCal = true;
@@ -98,7 +97,8 @@ void TouchManager::runCalibration() {
   _tft->setTouch(cal);
   _haveCal = true;
   _calSig = orientationSig();
-  _calFlipped = false;
+  _calFlipX = false;
+  _calFlipY = false;
   _needsCal = false;
   _useAffine = true;
   LOGI(TAG, "touch calibrated and saved");
@@ -118,13 +118,11 @@ void TouchManager::requestCalibration() { clearCalibration(); }
 
 void TouchManager::adaptCalibrationToOrientation() {
   if (!_haveCal) return;
+  if (!calibrationConvertible()) return;  // a 90° change: asked for at the next start
+  // Flip (bit 0) reverses both axes, mirror (bit 1) x, vertical mirror (bit 2) y.
   const uint8_t diff = (uint8_t)(orientationSig() ^ _calSig);
-  if (diff == 0) {
-    _calFlipped = false;
-  } else if (diff == 1) {
-    _calFlipped = true;  // flipped 180°: readPoint() reverses both axes
-  }
-  // Any other change (mirror, 90°) needs a new calibration, asked for at the next start.
+  _calFlipX = ((diff ^ (diff >> 1)) & 1) != 0;
+  _calFlipY = ((diff ^ (diff >> 2)) & 1) != 0;
 }
 
 void TouchManager::reacquireBus() {}
@@ -135,10 +133,8 @@ bool TouchManager::readPoint(Point& out) {
   if (!_ok || _tft == nullptr || _needsCal) return false;
   uint16_t x = 0, y = 0;
   if (!_tft->getTouch(&x, &y, 300)) return false;
-  if (_calFlipped) {
-    x = (uint16_t)(cfg::display::PANEL_W - 1 - x);
-    y = (uint16_t)(cfg::display::PANEL_H - 1 - y);
-  }
+  if (_calFlipX) x = (uint16_t)(cfg::display::PANEL_W - 1 - x);
+  if (_calFlipY) y = (uint16_t)(cfg::display::PANEL_H - 1 - y);
   // Panel coordinates -> UI coordinates (the UI is centered on the larger panel).
   long ux = (long)x - cfg::display::ORIGIN_X;
   long uy = (long)y - cfg::display::ORIGIN_Y;
@@ -397,23 +393,26 @@ void TouchManager::clearCalibration() {
 
 void TouchManager::adaptCalibrationToOrientation() {
   if (!_haveCal) return;
+  if (!calibrationConvertible()) return;  // a 90° change: asked for at the next start
+  // Flip (bit 0) reverses both axes, mirror (bit 1) x, vertical mirror (bit 2) y: a touch
+  // at screen x now belongs to W-1-x (and likewise y).
   const uint8_t diff = (uint8_t)(orientationSig() ^ _calSig);
-  if (diff == 0) {
-    memcpy(_aff, _baseAff, sizeof(_aff));
-    _useAffine = true;
-  } else if (diff == 1) {
-    // Flipped 180°: a touch at screen (x, y) now belongs to (W-1-x, H-1-y).
+  const bool flipX = ((diff ^ (diff >> 1)) & 1) != 0;
+  const bool flipY = ((diff ^ (diff >> 2)) & 1) != 0;
+  memcpy(_aff, _baseAff, sizeof(_aff));
+  if (flipX) {
     const float maxX = (float)cfg::display::WIDTH - 1.0f;
-    const float maxY = (float)cfg::display::HEIGHT - 1.0f;
     _aff[0] = -_baseAff[0];
     _aff[1] = -_baseAff[1];
     _aff[2] = maxX - _baseAff[2];
+  }
+  if (flipY) {
+    const float maxY = (float)cfg::display::HEIGHT - 1.0f;
     _aff[3] = -_baseAff[3];
     _aff[4] = -_baseAff[4];
     _aff[5] = maxY - _baseAff[5];
-    _useAffine = true;
   }
-  // Any other change (mirror, 90°) needs a new calibration, asked for at the next start.
+  _useAffine = true;
 }
 
 void TouchManager::requestCalibration() {

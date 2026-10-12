@@ -141,12 +141,17 @@ class TouchManager {
   float _aff[6] = {1, 0, 0, 0, 1, 0};  // x = a*rx + b*ry + c, y = d*rx + e*ry + f
   uint8_t orientationSig() const;
   // A stored calibration was made in one display orientation. If the screen has
-  // since been flipped 180° (and nothing else changed), the same calibration is
-  // reused with both axes reversed instead of asking again. Called whenever the
-  // display settings change and after a calibration is loaded or made.
+  // since been flipped 180° and/or mirrored (nothing else changed), the same
+  // calibration is reused with the matching axes reversed instead of asking
+  // again. Called whenever the display settings change and after a calibration
+  // is loaded or made.
   void adaptCalibrationToOrientation();
+  // Whether the stored calibration can follow the current orientation (anything
+  // but a 90° change can).
+  bool calibrationConvertible() const { return ((orientationSig() ^ _calSig) & 8) == 0; }
   bool _haveCal = false;     // a stored calibration exists...
   uint8_t _calSig = 0;       // ...made under this orientationSig()
-  bool _calFlipped = false;  // the screen is flipped 180° relative to that calibration
+  bool _calFlipX = false;    // the screen's x axis is reversed relative to that calibration
+  bool _calFlipY = false;    // ...and its y axis
   float _baseAff[6] = {1, 0, 0, 0, 1, 0};  // 2.8" boards: the calibration as stored
 };
