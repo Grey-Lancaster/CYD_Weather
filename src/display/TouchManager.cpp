@@ -37,6 +37,7 @@ uint8_t TouchManager::orientationSig() const {
 // ---------------------------------------------------------------------------
 namespace {
 constexpr const char* kCalKey = "cal";
+constexpr const char* kSigKey = "sig";  // orientation the calibration was made in
 constexpr size_t kCalBytes = 5 * sizeof(uint16_t);
 
 bool loadCalibration(uint16_t cal[5]) {
@@ -57,9 +58,18 @@ bool TouchManager::begin(const AppSettings& settings) {
   }
   uint16_t cal[5];
   if (loadCalibration(cal)) {
+    Preferences prefs;
+    prefs.begin(kCalNamespace, true);
+    // Calibrations saved before the orientation was recorded count as "current".
+    _calSig = prefs.getUChar(kSigKey, orientationSig());
+    prefs.end();
+    _haveCal = true;
     _tft->setTouch(cal);
-    _needsCal = false;
     _useAffine = true;
+    adaptCalibrationToOrientation();
+    const uint8_t diff = (uint8_t)(orientationSig() ^ _calSig);
+    _needsCal = diff != 0 && diff != 1;  // only a 180° flip can be converted
+    if (_needsCal) LOGW(TAG, "stored calibration was made in a different orientation, calibrating again");
   } else {
     _needsCal = true;
   }
@@ -83,8 +93,12 @@ void TouchManager::runCalibration() {
   Preferences prefs;
   prefs.begin(kCalNamespace, false);
   prefs.putBytes(kCalKey, cal, kCalBytes);
+  prefs.putUChar(kSigKey, orientationSig());
   prefs.end();
   _tft->setTouch(cal);
+  _haveCal = true;
+  _calSig = orientationSig();
+  _calFlipped = false;
   _needsCal = false;
   _useAffine = true;
   LOGI(TAG, "touch calibrated and saved");
@@ -94,11 +108,24 @@ void TouchManager::clearCalibration() {
   Preferences prefs;
   prefs.begin(kCalNamespace, false);
   prefs.remove(kCalKey);
+  prefs.remove(kSigKey);
   prefs.end();
+  _haveCal = false;
   LOGI(TAG, "touch calibration cleared");
 }
 
 void TouchManager::requestCalibration() { clearCalibration(); }
+
+void TouchManager::adaptCalibrationToOrientation() {
+  if (!_haveCal) return;
+  const uint8_t diff = (uint8_t)(orientationSig() ^ _calSig);
+  if (diff == 0) {
+    _calFlipped = false;
+  } else if (diff == 1) {
+    _calFlipped = true;  // flipped 180°: readPoint() reverses both axes
+  }
+  // Any other change (mirror, 90°) needs a new calibration, asked for at the next start.
+}
 
 void TouchManager::reacquireBus() {}
 
@@ -108,6 +135,10 @@ bool TouchManager::readPoint(Point& out) {
   if (!_ok || _tft == nullptr || _needsCal) return false;
   uint16_t x = 0, y = 0;
   if (!_tft->getTouch(&x, &y, 300)) return false;
+  if (_calFlipped) {
+    x = (uint16_t)(cfg::display::PANEL_W - 1 - x);
+    y = (uint16_t)(cfg::display::PANEL_H - 1 - y);
+  }
   // Panel coordinates -> UI coordinates (the UI is centered on the larger panel).
   long ux = (long)x - cfg::display::ORIGIN_X;
   long uy = (long)y - cfg::display::ORIGIN_Y;
@@ -229,11 +260,14 @@ bool TouchManager::begin(const AppSettings& settings) {
     want = prefs.getBool(kWantKey, false);
     prefs.end();
   }
-  if (have && st.sig == orientationSig()) {
-    memcpy(_aff, st.m, sizeof(_aff));
-    _useAffine = true;
-  } else if (have) {
-    LOGW(TAG, "stored calibration was made in a different orientation, calibrating again");
+  if (have) {
+    memcpy(_baseAff, st.m, sizeof(_baseAff));
+    _calSig = st.sig;
+    _haveCal = true;
+    adaptCalibrationToOrientation();
+    if (!_useAffine) {
+      LOGW(TAG, "stored calibration was made in a different orientation, calibrating again");
+    }
   }
   _needsCal = !_useAffine && (kRequireCalibration || want || have);
 
@@ -328,6 +362,9 @@ void TouchManager::runCalibration() {
 
   if (fitted) {
     memcpy(_aff, fit, sizeof(_aff));
+    memcpy(_baseAff, fit, sizeof(_baseAff));
+    _haveCal = true;
+    _calSig = orientationSig();
     _useAffine = true;
     StoredAffine st;
     memcpy(st.m, fit, sizeof(st.m));
@@ -354,7 +391,29 @@ void TouchManager::clearCalibration() {
   prefs.remove(kAffKey);
   prefs.remove(kWantKey);
   prefs.end();
+  _haveCal = false;
   LOGI(TAG, "touch calibration cleared");
+}
+
+void TouchManager::adaptCalibrationToOrientation() {
+  if (!_haveCal) return;
+  const uint8_t diff = (uint8_t)(orientationSig() ^ _calSig);
+  if (diff == 0) {
+    memcpy(_aff, _baseAff, sizeof(_aff));
+    _useAffine = true;
+  } else if (diff == 1) {
+    // Flipped 180°: a touch at screen (x, y) now belongs to (W-1-x, H-1-y).
+    const float maxX = (float)cfg::display::WIDTH - 1.0f;
+    const float maxY = (float)cfg::display::HEIGHT - 1.0f;
+    _aff[0] = -_baseAff[0];
+    _aff[1] = -_baseAff[1];
+    _aff[2] = maxX - _baseAff[2];
+    _aff[3] = -_baseAff[3];
+    _aff[4] = -_baseAff[4];
+    _aff[5] = maxY - _baseAff[5];
+    _useAffine = true;
+  }
+  // Any other change (mirror, 90°) needs a new calibration, asked for at the next start.
 }
 
 void TouchManager::requestCalibration() {
@@ -473,6 +532,7 @@ void TouchManager::applySettings(const AppSettings& settings) {
   _mirrorH = settings.mirrorH != 0;
   _mirrorV = settings.mirrorV != 0;
   _rotate90 = settings.rotate90 != 0;
+  adaptCalibrationToOrientation();
 }
 
 void TouchManager::poll() {

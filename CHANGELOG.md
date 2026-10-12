@@ -9,6 +9,11 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 
 ## [Unreleased]
 
+### Changed
+- Flipping the screen 180° no longer needs a new touch calibration: the stored one is
+  reused with both axes reversed, live (no restart). Mirror changes still ask for a
+  new calibration, since they are not a simple reversal. Applies to all boards.
+
 ## [2.0.0-rc3] - 2026-10-11
 
 Third release candidate: fixes the 3.5" display rotation problem found by the first tester.
