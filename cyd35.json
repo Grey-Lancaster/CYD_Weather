@@ -1,6 +1,6 @@
 {
-  "name": "CYD Weather 2.0.0-rc6 (3.5-inch, ST7796)",
-  "version": "2.0.0-rc6",
+  "name": "CYD Weather 2.0.0 (3.5-inch, ST7796)",
+  "version": "2.0.0",
   "builds": [
     {
       "chipFamily": "ESP32",
