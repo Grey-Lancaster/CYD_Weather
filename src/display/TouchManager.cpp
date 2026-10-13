@@ -541,9 +541,17 @@ void TouchManager::applySettings(const AppSettings& settings) {
   // runtime flip (display/DisplayConfig.h) would otherwise leave taps
   // mapped to the previous orientation.
   _flipped = settings.displayFlipped != 0;
+#if defined(BOARD_CYD35)
+  // Mirror and 90-degree rotation are ignored by the display on this board (see
+  // display/DisplayConfig.cpp), so they must not count as orientation changes here either.
+  _mirrorH = false;
+  _mirrorV = false;
+  _rotate90 = false;
+#else
   _mirrorH = settings.mirrorH != 0;
   _mirrorV = settings.mirrorV != 0;
   _rotate90 = settings.rotate90 != 0;
+#endif
   adaptCalibrationToOrientation();
 }
 

@@ -157,7 +157,7 @@ dt{color:#96aabe}dd{margin:0}
 <select name="displayFlipped"><option value="0">Normal (USB right)</option><option value="1">Flipped 180&deg; (USB left)</option></select>
 <div class="check" id="rot90Row"><input name="rotate90" type="checkbox" id="rot90"><label for="rot90">Rotate display 90&deg;</label></div>
 <p class="hint">Enable this if the screen shows portrait and cropped on first start.</p>
-<div class="check"><input name="mirrorH" type="checkbox" id="mirh"><label for="mirh">Mirror display</label></div>
+<div class="check" id="mirrorRow"><input name="mirrorH" type="checkbox" id="mirh"><label for="mirh">Mirror display</label></div>
 <p class="hint">Enable this if the screen shows text and images left-right reversed, as on some CYD panel variants.</p>
 <div class="check"><input name="invertColors" type="checkbox" id="inv"><label for="inv">Invert display colours</label></div>
 <p class="hint">Enable this if colours appear as their negative/inverse, as on some CYD panel variants.</p>
@@ -228,6 +228,7 @@ el('st-up').textContent=s.uptime;
 el('st-rs').textContent=s.lastRestart||'-';
 el('recalBtn').style.display=s.recalSupported?'':'none';
 {const h=s.rotate90Supported===false?'none':'';el('rot90Row').style.display=h;el('rot90Row').nextElementSibling.style.display=h}
+{const m=s.mirrorSupported===false?'none':'';el('mirrorRow').style.display=m;el('mirrorRow').nextElementSibling.style.display=m}
 el('st-heap').textContent=(s.heapFree/1024).toFixed(1)+' KB';
 el('st-wxsrc').textContent=s.weather.provider;
 el('st-wxupd').textContent=s.weather.valid?s.weather.lastUpdate+(s.weather.failed?' (last fetch failed, retrying)':''):(s.weather.failed?'Fetch failed':'Fetching…');

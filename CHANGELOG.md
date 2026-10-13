@@ -9,6 +9,18 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-10-13
+
+The modernised release: one build per board (including the new 3.5" CYD), pinned dependencies,
+touch calibration, a watchdog, over-the-air updates, a browser installer and a settings portal
+with screenshot and touch test. This version rolls up everything from the 2.0.0 release
+candidates (rc1 to rc6, below); the 3.5" build was confirmed on real hardware by a tester.
+
+### Changed
+- 3.5" board: *Mirror display* is ignored and hidden in the portal, like *Rotate display 90*
+  (the panel reads correctly as shipped).
+- The firmware now reports its real version (2.0.0) on the status page and in `/api/status`.
+
 ## [2.0.0-rc6] - 2026-10-13
 
 Sixth release candidate: a Touch test page, and the 3.5" screenshot is no longer shifted.

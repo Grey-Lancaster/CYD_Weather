@@ -83,7 +83,7 @@ jobs:
             echo '| `cyd` | ILI9341, normal colours | The standard CYD and many "2 USB" boards. **Try this first.** |'
             echo '| `cyd2usb` | ST7789 | "2 USB" boards with an ST7789 display |'
             echo '| `cyd2b` | ILI9341, inverted colours | "2B" variant |'
-            echo '| `cyd35` | ST7796 480x320 | 3.5" CYD (ESP32-32E): UI shown centered, touch calibration on first start; untested by the maintainer |'
+            echo '| `cyd35` | ST7796 480x320 | 3.5" CYD (ESP32-32E): UI shown centered, touch calibration on first start; confirmed working by a tester |'
             echo
             echo 'Wrong build = white screen or odd colours; nothing is damaged, just flash another. Flash `*-factory.bin` at offset 0 (it also resets settings and WiFi), e.g. `esptool.py --chip esp32 write_flash 0x0 CYD-Weather-cyd-factory.bin`.'
             echo

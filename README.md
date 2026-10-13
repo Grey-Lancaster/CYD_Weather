@@ -104,8 +104,12 @@ The first time it starts, the device asks you to touch four corners to calibrate
 the touch screen; this is saved. The web portal's System card has a
 **Recalibrate touch** button, and a factory reset (hold BOOT for 10 s) clears it.
 
-**This build has not been tested on hardware by the maintainer** (no board);
-it was written from a user's pin list. Reports are welcome in the issues.
+This build was written from a user's pin list and confirmed working on a real
+3.5" board by that user (display, touch calibration, WiFi picker, backlight,
+screenshot, 180-degree flip). The *Mirror display* and *Rotate display 90*
+settings are not offered on it (the panel is already landscape and reads
+correctly); portrait use is a possible future feature. Reports are welcome in the
+issues.
 
 ## Installing
 

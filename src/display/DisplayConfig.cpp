@@ -41,10 +41,15 @@ void DisplayConfig::apply(TFT_eSPI& tft, const AppSettings& settings) {
   // turning MV off would make the 480x320 panel portrait, pushing the centred
   // 320x240 UI off-screen. The setting is ignored here (and hidden in the portal).
   const bool rotate90 = false;
+  // Mirror display is not offered on this panel either (it reads correctly as shipped).
+  const bool mirrorH = false;
+  const bool mirrorV = false;
 #else
   const bool rotate90 = settings.rotate90 != 0;
+  const bool mirrorH = settings.mirrorH != 0;
+  const bool mirrorV = settings.mirrorV != 0;
 #endif
   tft.writedata(buildMadctl(settings.displayFlipped != 0, static_cast<ColorOrder>(settings.colorOrder),
-                            settings.mirrorH != 0, settings.mirrorV != 0, rotate90));
+                            mirrorH, mirrorV, rotate90));
   tft.invertDisplay(settings.invertColors != 0);
 }

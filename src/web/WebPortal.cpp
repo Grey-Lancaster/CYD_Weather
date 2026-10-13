@@ -322,8 +322,10 @@ void WebPortal::handleStatus() {
   doc["recalSupported"] = (bool)_onRecalibrate;
 #if defined(BOARD_CYD35)
   doc["rotate90Supported"] = false;
+  doc["mirrorSupported"] = false;
 #else
   doc["rotate90Supported"] = true;
+  doc["mirrorSupported"] = true;
 #endif
   doc["heapFree"] = ESP.getFreeHeap();
   doc["heapMin"] = ESP.getMinFreeHeap();
