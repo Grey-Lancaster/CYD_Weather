@@ -87,6 +87,17 @@ class TouchManager {
   // NetworkManager's outage log, is the signal that'd confirm or rule out
   // the WiFi-outage correlation next time this happens.
   uint32_t pressCount() const { return _pressCount; }
+
+  // The most recent touch reading, for the portal's Touch test page (/touch):
+  // where the board thinks the finger is (UI pixels, 0,0 = top-left of the
+  // dashboard) and the position before the calibration-orientation correction
+  // (panel pixels on the 3.5" board, raw controller values on the 2.8" boards).
+  struct TouchDebug {
+    int16_t uiX = 0, uiY = 0;
+    int32_t rawX = 0, rawY = 0;
+    uint32_t atMs = 0;  // millis() of the reading; 0 = none yet
+  };
+  const TouchDebug& lastTouch() const { return _dbg; }
   bool touchOk() const { return _ok; }
 
   // For LVGL's touch-indev read callback (see network/WifiProvisioning.cpp)
@@ -133,6 +144,7 @@ class TouchManager {
   Point _lastPoint;  // most recent point while touched, tracked for swipe distance
   uint32_t _pressMs = 0;
   uint32_t _pressCount = 0;  // diagnostic-only, see pressCount()
+  TouchDebug _dbg;
   bool _wasTouched = false;
   bool _gestureConsumed = false;
   bool _ok = false;

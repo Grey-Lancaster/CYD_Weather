@@ -133,6 +133,8 @@ bool TouchManager::readPoint(Point& out) {
   if (!_ok || _tft == nullptr || _needsCal) return false;
   uint16_t x = 0, y = 0;
   if (!_tft->getTouch(&x, &y, 300)) return false;
+  _dbg.rawX = x;
+  _dbg.rawY = y;
   if (_calFlipX) x = (uint16_t)(cfg::display::PANEL_W - 1 - x);
   if (_calFlipY) y = (uint16_t)(cfg::display::PANEL_H - 1 - y);
   // Panel coordinates -> UI coordinates (the UI is centered on the larger panel).
@@ -146,6 +148,9 @@ bool TouchManager::readPoint(Point& out) {
   if (uy > maxY) uy = maxY;
   out.x = (int16_t)ux;
   out.y = (int16_t)uy;
+  _dbg.uiX = out.x;
+  _dbg.uiY = out.y;
+  _dbg.atMs = millis();
   return true;
 }
 
@@ -441,6 +446,8 @@ bool TouchManager::readPoint(Point& out) {
   if (!_ok || _needsCal) return false;
   if (!(_ts.tirqTouched() && _ts.touched())) return false;
   const TS_Point raw = _ts.getPoint();
+  _dbg.rawX = raw.x;
+  _dbg.rawY = raw.y;
   if (_useAffine) {
     const long maxX = (long)cfg::display::WIDTH - 1;
     const long maxY = (long)cfg::display::HEIGHT - 1;
@@ -452,9 +459,15 @@ bool TouchManager::readPoint(Point& out) {
     if (y > maxY) y = maxY;
     out.x = (int16_t)x;
     out.y = (int16_t)y;
+    _dbg.uiX = out.x;
+    _dbg.uiY = out.y;
+    _dbg.atMs = millis();
     return true;
   }
   out = mapRawToScreen(raw.x, raw.y);
+  _dbg.uiX = out.x;
+  _dbg.uiY = out.y;
+  _dbg.atMs = millis();
   return true;
 }
 

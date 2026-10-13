@@ -44,6 +44,8 @@ bool WebPortal::begin() {
   _http.on("/api/sdcard/restore", HTTP_POST, [this]() { handleSdCardRestore(); });
   _http.on("/update", HTTP_POST, [this]() { handleUpdateDone(); },
            [this]() { handleUpdateUpload(); });
+  _http.on("/touch", HTTP_GET, [this]() { handleTouchPage(); });
+  _http.on("/api/touch", HTTP_GET, [this]() { handleTouchApi(); });
   _http.on("/mirror", HTTP_GET, [this]() { handleMirror(); });
   _http.on("/mirror.bmp", HTTP_GET, [this]() { handleMirrorImage(); });
   _http.onNotFound([this]() { handleNotFound(); });
@@ -132,6 +134,15 @@ void WebPortal::handleUpdateDone() {
   }
 }
 
+void WebPortal::handleTouchPage() {
+  _http.send_P(200, "text/html", WEB_TOUCH_HTML);
+}
+
+void WebPortal::handleTouchApi() {
+  _http.sendHeader("Cache-Control", "no-store");
+  _http.send(200, "application/json", _touchProbe ? _touchProbe() : String("{}"));
+}
+
 void WebPortal::handleMirror() {
   _http.send_P(200, "text/html", WEB_MIRROR_HTML);
 }
@@ -193,6 +204,16 @@ void WebPortal::handleMirrorImage() {
   const bool disableInversionForRead = _http.hasArg("noinv");
   if (disableInversionForRead) tft.invertDisplay(false);
 #if defined(BOARD_CYD35)
+  // readRectRGB() works in panel pixels and ignores the centring viewport, so drop the
+  // viewport for the capture and read from the dashboard's own origin on the panel.
+  tft.resetViewport();
+  const int32_t readX0 = cfg::display::ORIGIN_X;
+  const int32_t readY0 = cfg::display::ORIGIN_Y;
+#else
+  const int32_t readX0 = 0;
+  const int32_t readY0 = 0;
+#endif
+#if defined(BOARD_CYD35)
   // The ST7796 answers a pixel read in its current colour mode: 2 bytes per pixel in the
   // 16-bit mode the UI uses, but readRectRGB() expects 3. Switch to the 18-bit mode for
   // the capture (3 bytes per pixel, like the ILI9341) and back afterwards.
@@ -211,7 +232,7 @@ void WebPortal::handleMirrorImage() {
     // minimal-memory single-row path rather than failing the capture.
     uint8_t row[cfg::display::WIDTH * 3];
     for (int32_t y = h - 1; y >= 0; y--) {
-      tft.readRectRGB(0, y, w, 1, row);
+      tft.readRectRGB(readX0, readY0 + y, w, 1, row);
       if (needsSwap) {
         for (int32_t x = 0; x < w; x++) {
           const uint8_t r = row[x * 3];
@@ -229,6 +250,8 @@ void WebPortal::handleMirrorImage() {
 #if defined(BOARD_CYD35)
     tft.writecommand(0x3A);
     tft.writedata(0x55);
+    tft.setViewport(cfg::display::ORIGIN_X, cfg::display::ORIGIN_Y, cfg::display::WIDTH,
+                    cfg::display::HEIGHT, true);
 #endif
     return;
   }
@@ -237,7 +260,7 @@ void WebPortal::handleMirrorImage() {
   while (yEnd > 0) {
     const int32_t rows = min(kChunkRows, yEnd);
     const int32_t yStart = yEnd - rows;
-    tft.readRectRGB(0, yStart, w, rows, chunkBuf);
+    tft.readRectRGB(readX0, readY0 + yStart, w, rows, chunkBuf);
 
     const int32_t pixelsInChunk = rows * w;
     if (needsSwap) {
@@ -281,6 +304,8 @@ void WebPortal::handleMirrorImage() {
 #if defined(BOARD_CYD35)
   tft.writecommand(0x3A);
   tft.writedata(0x55);
+  tft.setViewport(cfg::display::ORIGIN_X, cfg::display::ORIGIN_Y, cfg::display::WIDTH,
+                  cfg::display::HEIGHT, true);
 #endif
   delete[] chunkBuf;
 }

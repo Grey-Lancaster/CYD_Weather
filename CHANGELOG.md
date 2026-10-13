@@ -9,6 +9,19 @@ once patch would reach double digits (e.g. `1.0.9` + one release =
 
 ## [Unreleased]
 
+## [2.0.0-rc6] - 2026-10-13
+
+Sixth release candidate: a Touch test page, and the 3.5" screenshot is no longer shifted.
+
+### Added
+- **Touch test** page (portal button, `/touch`): shows where the board thinks each tap landed,
+  as a dot on a copy of the dashboard, with the numbers before and after the orientation
+  correction. For checking touch alignment after changing flip or mirror. Feed: `/api/touch`.
+
+### Fixed
+- 3.5" board: the screenshot was shifted by the centring offset (80x40 pixels) and cut off on the
+  right and bottom; it now reads from the dashboard's own corner of the panel.
+
 ## [2.0.0-rc5] - 2026-10-12
 
 Fifth release candidate: touch follows the Mirror display setting too, a new WiFi library (hidden and saved networks), and a fix for the 3.5" screenshot.

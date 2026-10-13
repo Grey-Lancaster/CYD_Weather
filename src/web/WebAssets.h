@@ -174,6 +174,7 @@ dt{color:#96aabe}dd{margin:0}
 <button type="submit">Save</button>
 <button type="button" onclick="armConfirm(this,restartNow)">Restart</button>
 <button type="button" onclick="window.open('/mirror','_blank')">Screenshot</button>
+<button type="button" onclick="window.open('/touch','_blank')">Touch test</button>
 <button type="button" id="recalBtn" style="display:none" onclick="armConfirm(this,recalNow)">Recalibrate touch</button>
 <div id="msg"></div>
 </div>
@@ -333,6 +334,56 @@ const on=document.getElementById('auto').checked;
 if(timer){clearInterval(timer);timer=null}
 if(on)timer=setInterval(refresh,2000);
 }
+</script>
+</body>
+</html>
+)HTML";
+
+// Touch test: shows where the board thinks each tap landed, drawn on a copy of the
+// dashboard area (the numbers are in dashboard pixels, 0,0 = top-left). For checking
+// touch alignment after changing orientation settings; polls GET /api/touch.
+static const char WEB_TOUCH_HTML[] PROGMEM = R"HTML(<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CYD Weather - Touch Test</title>
+<style>
+:root{color-scheme:dark}
+body{font-family:system-ui,sans-serif;background:#12161c;color:#e8eaed;margin:0 auto;padding:1rem;max-width:480px;text-align:center}
+h1{font-size:1.1rem;margin-bottom:.2rem}
+canvas{width:100%;max-width:480px;border:1px solid #2c3644;border-radius:6px;background:#0b0f14;margin-top:.6rem}
+p{font-size:.9rem;color:#96aabe}
+#num{font-family:ui-monospace,monospace;color:#e8eaed;min-height:2.6em}
+</style>
+</head>
+<body>
+<h1>Touch test</h1>
+<p>Tap the screen of the board (try each corner). A dot appears where the board thinks you touched. The top-left of the box is the top-left of the dashboard.</p>
+<canvas id="c" width="320" height="240"></canvas>
+<div id="num">waiting for a tap...</div>
+<script>
+const c=document.getElementById('c'),g=c.getContext('2d'),n=document.getElementById('num');
+let W=320,H=240,last=null;
+function draw(){
+g.clearRect(0,0,c.width,c.height);
+g.strokeStyle='#2c3644';g.strokeRect(.5,.5,W-1,H-1);
+g.fillStyle='#96aabe';g.font='12px sans-serif';
+g.textAlign='left';g.fillText('top-left',6,16);
+g.textAlign='right';g.fillText('top-right',W-6,16);g.fillText('bottom-right',W-6,H-6);
+g.textAlign='left';g.fillText('bottom-left',6,H-6);
+if(last){g.fillStyle='#4aa3ff';g.beginPath();g.arc(last.x,last.y,7,0,7);g.fill();
+g.strokeStyle='#fff';g.beginPath();g.moveTo(last.x-12,last.y);g.lineTo(last.x+12,last.y);g.moveTo(last.x,last.y-12);g.lineTo(last.x,last.y+12);g.stroke()}
+}
+async function poll(){
+try{
+const r=await fetch('/api/touch',{cache:'no-store'}),t=await r.json();
+if(t.w){W=t.w;H=t.h;c.width=W;c.height=H}
+if(t.seen){last=t;n.textContent='x='+t.x+' y='+t.y+'  (before correction: '+t.px+', '+t.py+')  '+(t.ageMs<1500?'now':Math.round(t.ageMs/1000)+' s ago')}
+}catch(e){}
+draw();
+}
+draw();setInterval(poll,300);
 </script>
 </body>
 </html>

@@ -180,6 +180,16 @@ static void startApp(const String& ip) {
   networkManager.begin(settings);
 
   webPortal.onRecalibrate([]() { touchManager.requestCalibration(); });
+  webPortal.onTouchProbe([]() {
+    const TouchManager::TouchDebug& t = touchManager.lastTouch();
+    char buf[176];
+    snprintf(buf, sizeof(buf),
+             "{\"x\":%d,\"y\":%d,\"px\":%ld,\"py\":%ld,\"ageMs\":%ld,\"w\":%u,\"h\":%u,\"seen\":%s}",
+             (int)t.uiX, (int)t.uiY, (long)t.rawX, (long)t.rawY,
+             t.atMs ? (long)(millis() - t.atMs) : -1L, (unsigned)cfg::display::WIDTH,
+             (unsigned)cfg::display::HEIGHT, t.atMs ? "true" : "false");
+    return String(buf);
+  });
   webPortal.begin();
 
   scheduler.add("web.handle", cfg::sched::WEB_HANDLE_MS, []() { webPortal.handle(); });

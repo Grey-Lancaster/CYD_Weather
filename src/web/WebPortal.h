@@ -30,6 +30,8 @@
 //   POST /api/sdcard/restore   read it back from the SD card and apply
 //   POST /update              firmware image (multipart upload, field "firmware"):
 //                              written to the idle app slot, then restart
+//   GET  /touch                touch test page: a dot where the board thinks each tap landed
+//   GET  /api/touch            last touch {x,y (UI px), px,py (panel/raw), ageMs, w,h}
 //   GET  /mirror               screen-mirror viewer page (manual/auto refresh)
 //   GET  /mirror.bmp           current TFT contents as a 24-bit BMP, read
 //                              back over SPI row-by-row (no framebuffer
@@ -55,6 +57,8 @@ class WebPortal {
  public:
   using SettingsChangedCallback = std::function<void()>;
   using RecalibrateCallback = std::function<void()>;
+  // Returns the last touch reading as JSON (see GET /api/touch); set by main.cpp.
+  using TouchProbe = std::function<String()>;
 
   WebPortal(SettingsManager& settings, NetworkManager& network, WeatherService& weather,
             SdCardManager& sdCard, DisplayManager& display);
@@ -65,6 +69,7 @@ class WebPortal {
   // Boards that need a touch calibration (3.5"): enables POST /api/recal, which
   // runs this (forget the calibration) and restarts so the next boot asks again.
   void onRecalibrate(RecalibrateCallback cb) { _onRecalibrate = cb; }
+  void onTouchProbe(TouchProbe cb) { _touchProbe = cb; }
 
  private:
   void handleRoot();
@@ -79,6 +84,8 @@ class WebPortal {
   void handleSdCardBackup();
   void handleSdCardRestore();
   void handleMirror();
+  void handleTouchPage();
+  void handleTouchApi();
   void handleUpdateDone();
   void handleUpdateUpload();
   void handleMirrorImage();
@@ -95,6 +102,7 @@ class WebPortal {
   WebServer _http;
   SettingsChangedCallback _onSettingsChanged;
   RecalibrateCallback _onRecalibrate;
+  TouchProbe _touchProbe;
   uint32_t _restartAtMs = 0;
   uint32_t _applyAtMs = 0;
   bool _updateOk = false;
